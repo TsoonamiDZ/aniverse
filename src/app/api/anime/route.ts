@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-type SortKey = "popular" | "episodes" | "title" | "shuffle";
+type SortKey = "popular" | "episodes" | "rating" | "title" | "shuffle";
 
 const DEFAULT_PAGE_SIZE = 24;
 const MAX_PAGE_SIZE = 60;
@@ -13,7 +13,7 @@ const MAX_PAGE_SIZE = 60;
  * GET /api/anime?page=1&pageSize=24&sort=popular&q=
  *
  * sort:  popular (sourceCount desc) | episodes (episodeCount desc) |
- *        title (alphabetical) | shuffle (deterministic pseudo-random per page)
+ *        rating (score desc) | title (alphabetical) | shuffle (seeded random)
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -28,7 +28,7 @@ export async function GET(request: Request) {
     )
   );
   const sortRaw = (sp.get("sort") ?? "popular") as SortKey;
-  const sort: SortKey = ["popular", "episodes", "title", "shuffle"].includes(sortRaw)
+  const sort: SortKey = ["popular", "episodes", "rating", "title", "shuffle"].includes(sortRaw)
     ? sortRaw
     : "popular";
   const q = (sp.get("q") ?? "").trim();
@@ -48,6 +48,16 @@ export async function GET(request: Request) {
     posterUrl: string;
     episodeCount: number;
     sourceCount: number;
+    score: number | null;
+    animeType: string | null;
+    airedYear: number | null;
+    coverImage: string | null;
+    coverColor: string | null;
+    bannerImage: string | null;
+    trailerYoutubeId: string | null;
+    titleEnglish: string | null;
+    popularity: number | null;
+    genres: string | null;
   }[];
 
   if (sort === "shuffle") {
@@ -61,6 +71,16 @@ export async function GET(request: Request) {
         posterUrl: true,
         episodeCount: true,
         sourceCount: true,
+        score: true,
+        animeType: true,
+        airedYear: true,
+        coverImage: true,
+        coverColor: true,
+        bannerImage: true,
+        trailerYoutubeId: true,
+        titleEnglish: true,
+        popularity: true,
+        genres: true,
       },
     });
     items = all
@@ -74,6 +94,8 @@ export async function GET(request: Request) {
         ? [{ sourceCount: "desc" }, { title: "asc" }]
         : sort === "episodes"
         ? [{ episodeCount: "desc" }, { title: "asc" }]
+        : sort === "rating"
+        ? [{ score: "desc" }, { popularity: "desc" }]
         : [{ title: "asc" }];
     items = await db.anime.findMany({
       where,
@@ -87,6 +109,16 @@ export async function GET(request: Request) {
         posterUrl: true,
         episodeCount: true,
         sourceCount: true,
+        score: true,
+        animeType: true,
+        airedYear: true,
+        coverImage: true,
+        coverColor: true,
+        bannerImage: true,
+        trailerYoutubeId: true,
+        titleEnglish: true,
+        popularity: true,
+        genres: true,
       },
     });
   }

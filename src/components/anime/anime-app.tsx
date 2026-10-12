@@ -9,7 +9,7 @@ import { AnimeDetailView } from "./anime-detail-view";
 import { WatchView } from "./watch-view";
 import type { SortKey } from "@/lib/anime-types";
 
-const VALID_SORTS: SortKey[] = ["popular", "episodes", "title", "shuffle"];
+const VALID_SORTS: SortKey[] = ["popular", "episodes", "rating", "title", "shuffle"];
 
 export function AnimeApp() {
   const sp = useSearchParams();

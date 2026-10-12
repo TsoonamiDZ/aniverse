@@ -24,52 +24,54 @@ model Anime {
   importedAt   DateTime  @default(now())
   episodes     Episode[]
 
-  // ---- MyAnimeList (Jikan v4) enrichment ----
-  malId            Int?
-  malUrl           String?
-  malImageUrl      String? // webp large_image_url (higher-quality poster)
+  // ---- AniList (GraphQL) + MyAnimeList metadata enrichment ----
+  anilistId       Int?
+  malId           Int?     // AniList's idMal (links to MAL page)
+  anilistUrl      String?
+  malUrl          String?
+  /// portrait poster, high-res (AniList coverImage extraLarge)
+  coverImage      String?
+  /// dominant hex color from AniList coverImage.color
+  coverColor      String?
+  /// WIDE banner image (AniList bannerImage) — used for the cinematic hero backdrop
+  bannerImage     String?
   trailerYoutubeId String?
-  trailerEmbedUrl  String?
-  titleEnglish     String?
-  titleJapanese    String?
-  /// TV / Movie / OVA / ONA / Special / Music
-  animeType        String?
+  trailerThumbnail String?
+  titleRomaji     String?
+  titleEnglish    String?
+  titleJapanese   String?
+  /// TV / MOVIE / OVA / ONA / SPECIAL / MUSIC / TV_SHORT (AniList format)
+  animeType       String?
   /// Manga / Light Novel / Original / Game / etc.
-  animeSource      String?
-  /// MAL's reported episode count
-  malEpisodes      Int?
-  /// "Currently Airing" / "Finished Airing" / "Not yet aired"
-  animeStatus      String?
-  airing           Boolean?
-  airedString      String?
-  airedYear        Int?
-  season           String?
-  duration         String?
-  ageRating        String?
-  score            Float?
-  scoredBy         Int?
-  rank             Int?
-  popularityRank   Int?
-  members          Int?
-  favorites        Int?
-  synopsis         String?
-  background       String?
-  /// comma-separated names
-  studios          String?
-  genres           String?
-  themes           String?
-  demographics     String?
-  producers        String?
-  licensors        String?
-  metaFetchedAt    DateTime?
+  animeSource     String?
+  malEpisodes     Int?
+  /// FINISHED / RELEASING / NOT_YET_RELEASED / CANCELLED
+  animeStatus     String?
+  airing          Boolean?
+  airedString     String?
+  airedYear       Int?
+  season          String? // WINTER / SPRING / SUMMER / FALL
+  duration        Int?    // minutes per episode
+  /// 0-100 (AniList averageScore)
+  score           Int?
+  popularity      Int?
+  favorites       Int?
+  synopsis        String?
+  studios         String? // comma-separated
+  genres          String? // comma-separated
+  tags            String? // comma-separated (top tags)
+  nextEpisode     Int?
+  nextEpisodeAirAt String?
+  metaFetchedAt   DateTime?
   /// "ok" | "not_found" | "error"
-  metaStatus       String?
+  metaStatus      String?
 
   @@index([title])
   @@index([episodeCount])
   @@index([sourceCount])
   @@index([score])
   @@index([airedYear])
+  @@index([popularity])
 }
 
 /// A single episode belonging to an anime.

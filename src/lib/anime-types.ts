@@ -7,6 +7,17 @@ export interface AnimeListItem {
   posterUrl: string;
   episodeCount: number;
   sourceCount: number;
+  // AniList/MAL enrichment (all nullable until fetched)
+  score: number | null;
+  animeType: string | null;
+  airedYear: number | null;
+  coverImage: string | null;
+  coverColor: string | null;
+  bannerImage: string | null;
+  trailerYoutubeId: string | null;
+  titleEnglish: string | null;
+  popularity: number | null;
+  genres: string | null;
 }
 
 export interface AnimeListResponse {
@@ -37,6 +48,37 @@ export interface AnimeDetailResponse {
   episodeCount: number;
   sourceCount: number;
   episodes: AnimeEpisodeRef[];
+  // AniList/MAL enrichment
+  anilistId: number | null;
+  malId: number | null;
+  anilistUrl: string | null;
+  malUrl: string | null;
+  coverImage: string | null;
+  coverColor: string | null;
+  bannerImage: string | null;
+  trailerYoutubeId: string | null;
+  trailerThumbnail: string | null;
+  titleRomaji: string | null;
+  titleEnglish: string | null;
+  titleJapanese: string | null;
+  animeType: string | null;
+  animeSource: string | null;
+  malEpisodes: number | null;
+  animeStatus: string | null;
+  airing: boolean | null;
+  airedString: string | null;
+  airedYear: number | null;
+  season: string | null;
+  duration: number | null;
+  score: number | null;
+  popularity: number | null;
+  favorites: number | null;
+  synopsis: string | null;
+  studios: string | null;
+  genres: string | null;
+  tags: string | null;
+  nextEpisode: number | null;
+  nextEpisodeAirAt: string | null;
 }
 
 export interface WatchSource {
@@ -80,11 +122,12 @@ export interface StatsResponse {
   topProviders: { provider: string; count: number }[];
 }
 
-export type SortKey = "popular" | "episodes" | "title" | "shuffle";
+export type SortKey = "popular" | "episodes" | "rating" | "title" | "shuffle";
 
 export const SORT_LABELS: Record<SortKey, string> = {
   popular: "الأكثر رواجًا",
   episodes: "الأكثر حلقات",
+  rating: "الأعلى تقييماً",
   title: "أبجديًا",
   shuffle: "اكتشاف عشوائي",
 };

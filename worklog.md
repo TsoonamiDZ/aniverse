@@ -135,3 +135,119 @@ Work Log:
 
 Stage Summary:
 - Site is fully interactive and browser-verified. Lint clean, 0 runtime/hydration errors.
+
+---
+Task ID: 8
+Agent: main
+Task: Extend Prisma schema with AniList/MAL metadata columns + write enrichment script.
+
+Work Log:
+- Added ~35 enrichment columns to Anime: anilistId, malId, coverImage, coverColor,
+  bannerImage (WIDE), trailerYoutubeId, titleRomaji/English/Japanese, animeType,
+  animeSource, malEpisodes, animeStatus, airing, airedString/Year, season, duration,
+  score (0-100), popularity, favorites, synopsis, studios, genres, tags, nextEpisode,
+  metaFetchedAt, metaStatus. Indexes on score, airedYear, popularity.
+- Tried Jikan (api.jikan.moe) first — sandbox network BLOCKS it (connection hangs).
+- Pivoted to AniList GraphQL (graphql.anilist.co — reachable, no key).
+- First attempt used aliased `Media(search:...)` queries — FAILED: AniList returns
+  HTTP 404 with ALL aliases null when ANY single search has no match (nullifies the
+  whole batch). So "One Piece" came back null when "Meitantei Conan" in same batch
+  didn't match.
+- FIX: switched to `Page(page:1, perPage:1) { media(search:...) }` — a no-match
+  returns media:[] (HTTP 200) instead of null, so each alias is independent.
+- Also added retry/backoff for 429/5xx, JSON-body parsing regardless of HTTP status
+  (AniList's "Not Found" comes as 404 WITH a data body of nulls).
+- Batched 10 aliased Page queries per request (complexity-safe).
+
+Stage Summary:
+- scripts/enrich-anilist.ts: batched AniList GraphQL enrichment (10/batch, 1.1s delay).
+
+---
+Task ID: 9
+Agent: main
+Task: Run full enrichment for all 2,186 anime.
+
+Work Log:
+- Ran enrichment (popular-first). First foreground attempt hit AniList rate-limit
+  (429) after ~1,000 anime — bumped BASE_DELAY_MS 600→1100ms (~55 req/min, under 90).
+- Reset 40 transient "error" rows and re-ran the remainder.
+- FINAL: ok=1,780 · not_found=406 · pending=0. Match rate ~81%.
+- The 406 not_found are obscure romanized titles (movies/specials with non-standard
+  transliterations) that AniList search can't match — they gracefully show no meta.
+- Verified top anime: One Piece (score 87, banner, Toei, #e49335 color, genres),
+  Meitantei Conan→"Detective Conan" (82, TMS), Bleach (79, trailer), Boruto (trailer),
+  Dragon Ball Z (81). Pokemon 2019 not_found (title mismatch).
+
+Stage Summary:
+- 1,780 anime enriched with full AniList/MAL metadata (synopsis, score, banner,
+  cover, trailer, genres, studios, year, status, duration, tags, MAL/AniList links).
+
+---
+Task ID: 10
+Agent: main
+Task: Update APIs to return enrichment fields + add "rating" sort.
+
+Work Log:
+- /api/anime (list): selects score, animeType, airedYear, coverImage, coverColor,
+  bannerImage, trailerYoutubeId, titleEnglish, popularity, genres (for cards + hero).
+- /api/anime/[slug]: selects ALL meta fields (full detail).
+- Added sort=rating (score desc, popularity desc) — SQLite sorts NULLs last in DESC.
+- SortKey type + SORT_LABELS + home-view tabs + anime-app VALID_SORTS updated.
+
+Stage Summary:
+- List + detail APIs now return rich metadata; 5 sort options incl. rating.
+
+---
+Task ID: 11 & 12 & 13
+Agent: main
+Task: Redesign cards + cinematic hero + full detail info panel (PROFESSIONAL, not MAL-clone).
+
+Work Log:
+- src/lib/anime-format.ts: formatScore (/10), scoreTier (emerald/amber/rose),
+  typeLabel, statusLabel, seasonLabel, splitList, pickPoster (AniList cover || source).
+- AnimeCard: high-res cover (AniList) with score badge (★ 8.7, color-tiered),
+  type+year chip, hover play button tinted with coverColor, accent edge on hover,
+  English title preferred + romaji subtitle.
+- trailer-dialog.tsx: YouTube trailer modal (autoplay-muted) — "شاهد الإعلان" button.
+- Hero (cinematic): WIDE bannerImage backdrop (cover fallback) with motion crossfade,
+  gradient overlays + coverColor glow; poster card; مميّز badge + type/year chips;
+  big title (English preferred) + romaji subtitle; score block (★ 8.7 /10) + episode
+  count; genre chips; "شاهد الآن" + "شاهد الإعلان" (trailer) + "التفاصيل" CTAs;
+  prev/next + dot navigation; 7s auto-rotate.
+- AnimeDetailView: blurred-banner hero with poster, score block (★ + popularity +
+  favorites), genres, trailer button, "watch first episode" CTA. Two-column body:
+  INFO panel (type, source, episodes [MAL count compare], duration, status, aired,
+  season+year, studio, popularity) + MAL/AniList link buttons; SYNOPSIS (cleaned
+  multiline) + TAGS chips. Empty-state when no meta. Scrollable episode grid below.
+- HomeView sorts: popular / episodes / rating / title / shuffle.
+- NOTE on design intent (per user): uses AniList/MAL DATA but the UI is a custom
+  professional streaming-site aesthetic (cinematic hero, poster-forward cards,
+  gradient backdrops) — NOT a MyAnimeList layout clone.
+
+Stage Summary:
+- All three views rebuilt with rich metadata + cinematic visuals.
+
+---
+Task ID: 14
+Agent: main
+Task: Lint + agent-browser verification.
+
+Work Log:
+- bun run lint: CLEAN (0 errors, 0 warnings).
+- Dev server restart got the new Prisma client (regenerated via db:generate +
+  .next cache clear + restart) — list API now returns score/type/year/cover/banner.
+- agent-browser (fresh session, 0 console errors):
+  * Home: cinematic hero "أنميات مميزة" with ONE PIECE (banner backdrop, score 87,
+    English title), auto-rotating dots for Conan/Bleach. Grid of 24 cards with
+    ENGLISH titles (ONE PIECE, Detective Conan, Boruto, Bleach, InuYasha,
+    Naruto: Shippuden, Hunter x Hunter (2011), Fairy Tail, ...) — all with score
+    badges + type/year chips.
+  * Detail /?anime=one-piece: eval confirmed ALL content present — synopsis text
+    ("Gold Roger", "Luffy"), studio "Toei", type "TV", year "1999", genres
+    (Action/Adventure), "القصة" + "معلومات" headings, MAL + AniList link buttons,
+    duration (دقيقة). 0 errors.
+- NOTE: dev server is reaped by the bash tool between commands; started it as the
+  final bash action so it stays alive for the user's Preview Panel.
+
+Stage Summary:
+- Site verified end-to-end: rich MAL data, professional cinematic UI, 0 errors.

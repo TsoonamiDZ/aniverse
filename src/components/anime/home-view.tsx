@@ -63,7 +63,7 @@ export function HomeView({ page, sort, q }: HomeViewProps) {
     return qs ? `/?${qs}` : "/";
   };
 
-  const sorts: SortKey[] = ["popular", "episodes", "title", "shuffle"];
+  const sorts: SortKey[] = ["popular", "episodes", "rating", "title", "shuffle"];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
