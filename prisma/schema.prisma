@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// Prisma schema for the Anime streaming catalog.
+// Data source: okanime.xyz snapshot (2186 anime, 25866 episodes, 149216 watch links).
 
 generator client {
   provider = "prisma-client-js"
@@ -13,20 +10,63 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+/// A single anime series.
+model Anime {
+  /// Source-provided id (slug based), e.g. "one-piece"
+  id           String    @id
+  slug         String    @unique
+  title        String
+  pageUrl      String
+  posterUrl    String
+  episodeCount Int       @default(0)
+  /// Total watch-source links aggregated across all episodes (denormalized for fast stats/sort)
+  sourceCount  Int       @default(0)
+  importedAt   DateTime  @default(now())
+  episodes     Episode[]
+
+  @@index([title])
+  @@index([episodeCount])
+  @@index([sourceCount])
 }
 
-model Post {
-  id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+/// A single episode belonging to an anime.
+model Episode {
+  /// Source-provided id (slug based), e.g. "one-piece-episode-1"
+  id             String    @id
+  slug           String    @unique
+  title          String
+  animeId        String
+  anime          Anime     @relation(fields: [animeId], references: [id], onDelete: Cascade)
+  animeTitle     String
+  /// Stored as a string because the source mixes ints ("1") and special labels.
+  episodeNumber  String
+  /// Numeric projection of episodeNumber for correct sorting (0 when non-numeric).
+  episodeSort    Int       @default(0)
+  episodePageUrl String
+  animePageUrl   String
+  posterUrl      String
+  lastModified   String?
+  importedAt     DateTime  @default(now())
+  watchSources   WatchSource[]
+
+  @@index([animeId])
+  @@index([animeId, episodeSort])
+  @@index([episodeSort])
+}
+
+/// One playable embed link for an episode (provider + quality).
+model WatchSource {
+  id           Int      @id @default(autoincrement())
+  episodeId    String
+  episode      Episode @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  provider     String
+  quality      String
+  label        String
+  watchUrl     String
+  providerHost String
+
+  @@index([episodeId])
+  @@index([provider])
+  @@index([quality])
+  @@index([episodeId, quality])
 }
