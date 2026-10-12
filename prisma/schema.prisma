@@ -57,9 +57,12 @@ model Anime {
   popularity      Int?
   favorites       Int?
   synopsis        String?
+  synopsisAr      String?
   studios         String? // comma-separated
   genres          String? // comma-separated
+  genresAr        String? // comma-separated (Arabic)
   tags            String? // comma-separated (top tags)
+  tagsAr          String? // comma-separated (Arabic, best-effort)
   nextEpisode     Int?
   nextEpisodeAirAt String?
   metaFetchedAt   DateTime?
