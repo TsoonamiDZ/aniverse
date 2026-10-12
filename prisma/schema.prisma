@@ -24,9 +24,52 @@ model Anime {
   importedAt   DateTime  @default(now())
   episodes     Episode[]
 
+  // ---- MyAnimeList (Jikan v4) enrichment ----
+  malId            Int?
+  malUrl           String?
+  malImageUrl      String? // webp large_image_url (higher-quality poster)
+  trailerYoutubeId String?
+  trailerEmbedUrl  String?
+  titleEnglish     String?
+  titleJapanese    String?
+  /// TV / Movie / OVA / ONA / Special / Music
+  animeType        String?
+  /// Manga / Light Novel / Original / Game / etc.
+  animeSource      String?
+  /// MAL's reported episode count
+  malEpisodes      Int?
+  /// "Currently Airing" / "Finished Airing" / "Not yet aired"
+  animeStatus      String?
+  airing           Boolean?
+  airedString      String?
+  airedYear        Int?
+  season           String?
+  duration         String?
+  ageRating        String?
+  score            Float?
+  scoredBy         Int?
+  rank             Int?
+  popularityRank   Int?
+  members          Int?
+  favorites        Int?
+  synopsis         String?
+  background       String?
+  /// comma-separated names
+  studios          String?
+  genres           String?
+  themes           String?
+  demographics     String?
+  producers        String?
+  licensors        String?
+  metaFetchedAt    DateTime?
+  /// "ok" | "not_found" | "error"
+  metaStatus       String?
+
   @@index([title])
   @@index([episodeCount])
   @@index([sourceCount])
+  @@index([score])
+  @@index([airedYear])
 }
 
 /// A single episode belonging to an anime.
