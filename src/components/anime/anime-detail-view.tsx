@@ -115,8 +115,9 @@ export function AnimeDetailView({ slug }: { slug: string }) {
   const accent = anime.coverColor || undefined;
   const scoreStr = formatScore(anime.score);
   const tier = scoreTier(anime.score);
-  const genres = splitList(anime.genres);
+  const genres = splitList(anime.genresAr || anime.genres);
   const tags = splitList(anime.tags).slice(0, 12);
+  const synopsis = anime.synopsisAr || anime.synopsis;
   const studios = splitList(anime.studios);
   const type = typeLabel(anime.animeType);
   const status = statusLabel(anime.animeStatus);
@@ -306,15 +307,20 @@ export function AnimeDetailView({ slug }: { slug: string }) {
 
         {/* Synopsis + tags */}
         <div className="min-w-0 space-y-5">
-          {anime.synopsis && (
+          {synopsis && (
             <div className="rounded-xl border border-border/50 bg-card/40 p-5">
               <h2 className="mb-3 flex items-center gap-2 text-sm font-bold">
                 <Info className="h-4 w-4 text-primary" />
                 القصة
               </h2>
               <p className="whitespace-pre-line text-sm leading-7 text-foreground/90">
-                {anime.synopsis}
+                {synopsis}
               </p>
+              {!anime.synopsisAr && anime.synopsis && (
+                <p className="mt-3 border-t border-border/40 pt-2 text-[11px] text-muted-foreground/70">
+                  ⓘ لا يتوفر ملخص عربي رسمي لهذا الأنمي بعد — المعروض أعلاه هو المصدر الإنجليزي من AniList.
+                </p>
+              )}
             </div>
           )}
           {tags.length > 0 && (

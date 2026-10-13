@@ -45,7 +45,7 @@ export function Hero({ items }: HeroProps) {
   const accent = current.coverColor || undefined;
   const scoreStr = formatScore(current.score);
   const tier = scoreTier(current.score);
-  const genres = splitList(current.genres).slice(0, 4);
+  const genres = splitList(current.genresAr || current.genres).slice(0, 4);
   const type = typeLabel(current.animeType);
 
   return (

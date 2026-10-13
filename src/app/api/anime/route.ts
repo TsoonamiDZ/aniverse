@@ -58,6 +58,7 @@ export async function GET(request: Request) {
     titleEnglish: string | null;
     popularity: number | null;
     genres: string | null;
+    genresAr: string | null;
   }[];
 
   if (sort === "shuffle") {
@@ -81,6 +82,7 @@ export async function GET(request: Request) {
         titleEnglish: true,
         popularity: true,
         genres: true,
+        genresAr: true,
       },
     });
     items = all
@@ -119,6 +121,7 @@ export async function GET(request: Request) {
         titleEnglish: true,
         popularity: true,
         genres: true,
+        genresAr: true,
       },
     });
   }

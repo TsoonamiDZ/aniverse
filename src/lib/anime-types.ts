@@ -18,6 +18,7 @@ export interface AnimeListItem {
   titleEnglish: string | null;
   popularity: number | null;
   genres: string | null;
+  genresAr: string | null;
 }
 
 export interface AnimeListResponse {
@@ -74,9 +75,12 @@ export interface AnimeDetailResponse {
   popularity: number | null;
   favorites: number | null;
   synopsis: string | null;
+  synopsisAr: string | null;
   studios: string | null;
   genres: string | null;
+  genresAr: string | null;
   tags: string | null;
+  tagsAr: string | null;
   nextEpisode: number | null;
   nextEpisodeAirAt: string | null;
 }
