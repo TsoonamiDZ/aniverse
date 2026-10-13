@@ -9,7 +9,7 @@ import { AnimeDetailView } from "./anime-detail-view";
 import { WatchView } from "./watch-view";
 import type { SortKey } from "@/lib/anime-types";
 
-const VALID_SORTS: SortKey[] = ["popular", "episodes", "rating", "title", "shuffle"];
+const VALID_SORTS: SortKey[] = ["recent", "popular", "episodes", "rating", "title", "shuffle"];
 
 export function AnimeApp() {
   const sp = useSearchParams();
@@ -18,7 +18,7 @@ export function AnimeApp() {
   const anime = sp.get("anime");
   const q = sp.get("q") ?? "";
   const sortRaw = sp.get("sort") as SortKey | null;
-  const sort: SortKey = sortRaw && VALID_SORTS.includes(sortRaw) ? sortRaw : "popular";
+  const sort: SortKey = sortRaw && VALID_SORTS.includes(sortRaw) ? sortRaw : "recent";
   const pageRaw = parseInt(sp.get("page") ?? "1", 10);
   const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
 

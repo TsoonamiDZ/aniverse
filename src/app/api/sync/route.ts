@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { runSync } from "@/lib/sync";
+import { isAdminRequest } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // allow up to 5 min for a sync pass
 
 /**
- * POST /api/sync
+ * POST /api/sync  (admin-only — requires the admin cookie)
  * Body (optional): { dryRun?: boolean, limit?: number, episodesOnly?: boolean, animeOnly?: boolean, since?: string }
  *
  * Triggers an okanime.xyz sync pass (scan sitemaps → add NEW anime/episodes
@@ -13,6 +14,14 @@ export const maxDuration = 300; // allow up to 5 min for a sync pass
  * request finishes quickly; run again to pull more.
  */
 export async function POST(request: Request) {
+  // Protect: only the authenticated admin (via /admin) may trigger a sync.
+  if (!isAdminRequest(request)) {
+    return NextResponse.json(
+      { ok: false, error: "unauthorized — this tool is admin-only" },
+      { status: 401 }
+    );
+  }
+
   let body: Record<string, unknown> = {};
   try {
     const text = await request.text();
@@ -23,7 +32,7 @@ export async function POST(request: Request) {
 
   const limit =
     typeof body.limit === "number" && body.limit > 0
-      ? Math.min(100, Math.floor(body.limit))
+      ? Math.min(200, Math.floor(body.limit))
       : 30;
 
   try {

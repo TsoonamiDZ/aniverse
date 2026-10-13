@@ -7,7 +7,6 @@ import { Search, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "./theme-toggle";
-import { SyncButton } from "./sync-button";
 
 export function SiteHeader({ totalAnime }: { totalAnime?: number }) {
   const router = useRouter();
@@ -97,7 +96,6 @@ export function SiteHeader({ totalAnime }: { totalAnime?: number }) {
         </form>
 
         <div className="flex shrink-0 items-center gap-1">
-          <SyncButton />
           <Button
             asChild
             variant="ghost"

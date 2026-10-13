@@ -356,3 +356,49 @@ Stage Summary:
 - The site now ships a two-step visual update tool (scan → review list → update DB)
   AND a one-click project download (zip with DB + tool) so the user can run it
   locally. All verified working.
+
+---
+Task ID: 18
+Agent: main
+Task: Separate protected admin tool (/admin) + organized-by-recency public site.
+
+Work Log:
+- Recency data verified: Episode.lastModified (okanime recency: newest "Psyяen الحلقة 2"
+  2026-10-12) + Anime.importedAt (recently added to our catalog).
+- Added sort=recent (importedAt desc) to /api/anime; made it the DEFAULT sort
+  (was "popular"). SortKey/SORT_LABELS updated; anime-app default = recent.
+- Added /api/recent/episodes (newest by lastModified, joined with anime cover/poster)
+  and /api/recent/anime (newest by importedAt).
+- Reorganized HomeView: Hero → "أحدث الحلقات المضافة" (horizontal strip) →
+  "أحدث الأنميات المضافة" (grid) → "تصفّح المكتبة" (browse grid, default recent).
+  Built recent-episodes-strip.tsx component.
+- REMOVED the public "تحديث" button from SiteHeader (the tool moved to /admin).
+- Built the protected, standalone admin tool:
+  * src/lib/admin-auth.ts: ADMIN_PASSWORD (env, default "aniqa-admin"),
+    isAdmin() (server, via cookies()), isAdminRequest() (API, via Cookie header).
+  * /admin page (server component): authed → AdminTool, else → AdminLogin.
+  * AdminLogin.tsx: password form → POST /api/admin/auth → router.refresh().
+  * AdminTool.tsx: full-page interface — stats cards (anime/episodes/sources),
+    "فحص الجديد" button (dry-run scan), review (badges + new-anime grid + new-episodes
+    list with episode # + sources count), "تحديث قاعدة البيانات" button (real insert),
+    phases (scanning/review/updating/done), logout.
+  * /api/admin/auth (POST: validate password, set httpOnly cookie, 7 days).
+  * /api/admin/logout (POST: clear cookie).
+  * Protected /api/sync: isAdminRequest() check → 401 "unauthorized — admin-only"
+    without the cookie.
+- Verified end-to-end:
+  * Public homepage: hero "مميّز الآن" + "أحدث الحلقات المضافة" + "أحدث الأنميات
+    المضافة" (Shiotaiou, Yuuki Yuuna, Uchitama...) + "تصفّح المكتبة"; NO public
+    تحديث button. 0 errors.
+  * /api/sync without auth → 401.
+  * /admin (no auth) → login form ("أداة تحديث المكتبة", "كلمة السر").
+  * POST /api/admin/auth {password:"aniqa-admin"} → {ok:true} + cookie.
+  * /admin with cookie → AdminTool ("فحص الجديد", "خروج", stats).
+  * /api/sync with cookie → runs (found +2 episodes, +16 sources).
+- Updated README (admin tool section + deployment section). Rebuilt download/aniqa-site.zip
+  (13MB) including /admin, sync lib, organized home. Verified /admin + sync + README in zip.
+
+Stage Summary:
+- The site is now: a public, recency-organized site at `/` (no admin button) + a separate,
+  password-protected standalone admin tool at `/admin` (scan → review list → update DB)
+  + the downloadable package (13MB) updated with all of this.

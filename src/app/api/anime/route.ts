@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-type SortKey = "popular" | "episodes" | "rating" | "title" | "shuffle";
+type SortKey = "recent" | "popular" | "episodes" | "rating" | "title" | "shuffle";
 
 const DEFAULT_PAGE_SIZE = 24;
 const MAX_PAGE_SIZE = 60;
@@ -12,8 +12,9 @@ const MAX_PAGE_SIZE = 60;
 /**
  * GET /api/anime?page=1&pageSize=24&sort=popular&q=
  *
- * sort:  popular (sourceCount desc) | episodes (episodeCount desc) |
- *        rating (score desc) | title (alphabetical) | shuffle (seeded random)
+ * sort:  recent (importedAt desc) | popular (sourceCount desc) |
+ *        episodes (episodeCount desc) | rating (score desc) | title (alphabetical) |
+ *        shuffle (seeded random). Default: recent.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -27,10 +28,10 @@ export async function GET(request: Request) {
       parseInt(sp.get("pageSize") ?? String(DEFAULT_PAGE_SIZE), 10) || DEFAULT_PAGE_SIZE
     )
   );
-  const sortRaw = (sp.get("sort") ?? "popular") as SortKey;
-  const sort: SortKey = ["popular", "episodes", "rating", "title", "shuffle"].includes(sortRaw)
+  const sortRaw = (sp.get("sort") ?? "recent") as SortKey;
+  const sort: SortKey = ["recent", "popular", "episodes", "rating", "title", "shuffle"].includes(sortRaw)
     ? sortRaw
-    : "popular";
+    : "recent";
   const q = (sp.get("q") ?? "").trim();
 
   const where: Prisma.AnimeWhereInput = {};
@@ -92,7 +93,9 @@ export async function GET(request: Request) {
       .slice((page - 1) * pageSize, page * pageSize);
   } else {
     const orderBy: Prisma.AnimeOrderByWithRelationInput[] =
-      sort === "popular"
+      sort === "recent"
+        ? [{ importedAt: "desc" }, { title: "asc" }]
+        : sort === "popular"
         ? [{ sourceCount: "desc" }, { title: "asc" }]
         : sort === "episodes"
         ? [{ episodeCount: "desc" }, { title: "asc" }]

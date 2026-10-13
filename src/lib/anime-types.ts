@@ -126,9 +126,23 @@ export interface StatsResponse {
   topProviders: { provider: string; count: number }[];
 }
 
-export type SortKey = "popular" | "episodes" | "rating" | "title" | "shuffle";
+export interface RecentEpisode {
+  id: string;
+  slug: string;
+  title: string;
+  animeId: string;
+  animeSlug: string;
+  animeTitle: string;
+  episodeNumber: string;
+  posterUrl: string;
+  coverColor: string | null;
+  lastModified: string | null;
+}
+
+export type SortKey = "recent" | "popular" | "episodes" | "rating" | "title" | "shuffle";
 
 export const SORT_LABELS: Record<SortKey, string> = {
+  recent: "الأحدث إضافة",
   popular: "الأكثر رواجًا",
   episodes: "الأكثر حلقات",
   rating: "الأعلى تقييماً",

@@ -2,12 +2,19 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Search } from "lucide-react";
+import { Search, Clock, Sparkles } from "lucide-react";
 import { AnimeCard } from "./anime-card";
 import { Hero } from "./hero";
 import { Pagination } from "./pagination";
+import { RecentEpisodesStrip } from "./recent-episodes-strip";
 import { AnimeGridSkeleton, HeroSkeleton } from "./skeletons";
-import { SORT_LABELS, type AnimeListResponse, type SortKey } from "@/lib/anime-types";
+import {
+  SORT_LABELS,
+  type AnimeListResponse,
+  type AnimeListItem,
+  type RecentEpisode,
+  type SortKey,
+} from "@/lib/anime-types";
 
 const PAGE_SIZE = 24;
 
@@ -33,6 +40,18 @@ async function fetchHero(): Promise<AnimeListResponse> {
   return r.json();
 }
 
+async function fetchRecentEpisodes(): Promise<RecentEpisode[]> {
+  const r = await fetch("/api/recent/episodes?limit=16", { cache: "no-store" });
+  if (!r.ok) throw new Error("recent episodes failed");
+  return r.json();
+}
+
+async function fetchRecentAnime(): Promise<{ items: AnimeListItem[] }> {
+  const r = await fetch("/api/recent/anime?limit=12", { cache: "no-store" });
+  if (!r.ok) throw new Error("recent anime failed");
+  return r.json();
+}
+
 interface HomeViewProps {
   page: number;
   sort: SortKey;
@@ -41,6 +60,7 @@ interface HomeViewProps {
 
 export function HomeView({ page, sort, q }: HomeViewProps) {
   const isSearching = q.trim().length > 0;
+  const isDefaultBrowse = !isSearching && sort === "recent" && page === 1;
 
   const list = useQuery({
     queryKey: ["anime-list", page, sort, q],
@@ -54,6 +74,20 @@ export function HomeView({ page, sort, q }: HomeViewProps) {
     staleTime: 10 * 60 * 1000,
   });
 
+  const recentEpisodes = useQuery({
+    queryKey: ["recent-episodes"],
+    queryFn: fetchRecentEpisodes,
+    enabled: isDefaultBrowse,
+    staleTime: 60 * 1000,
+  });
+
+  const recentAnime = useQuery({
+    queryKey: ["recent-anime"],
+    queryFn: fetchRecentAnime,
+    enabled: isDefaultBrowse,
+    staleTime: 60 * 1000,
+  });
+
   const hrefForPage = (p: number) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
@@ -63,7 +97,7 @@ export function HomeView({ page, sort, q }: HomeViewProps) {
     return qs ? `/?${qs}` : "/";
   };
 
-  const sorts: SortKey[] = ["popular", "episodes", "rating", "title", "shuffle"];
+  const sorts: SortKey[] = ["recent", "popular", "episodes", "rating", "title", "shuffle"];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
@@ -71,6 +105,31 @@ export function HomeView({ page, sort, q }: HomeViewProps) {
       {!isSearching && (
         <section className="mb-8">
           {hero.isLoading || !hero.data ? <HeroSkeleton /> : <Hero items={hero.data.items} />}
+        </section>
+      )}
+
+      {/* Recent episodes strip (default browse only) */}
+      {isDefaultBrowse && recentEpisodes.data && (
+        <RecentEpisodesStrip episodes={recentEpisodes.data} />
+      )}
+
+      {/* Recent anime (default browse only) */}
+      {isDefaultBrowse && recentAnime.data && recentAnime.data.items.length > 0 && (
+        <section className="mb-8">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-lg font-bold">
+              <Clock className="h-5 w-5 text-primary" />
+              أحدث الأنميات المضافة
+            </h2>
+            <Link href="/?sort=recent" className="text-xs text-primary hover:underline">
+              عرض الكل
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
+            {recentAnime.data.items.slice(0, 12).map((a) => (
+              <AnimeCard key={a.id} anime={a} />
+            ))}
+          </div>
         </section>
       )}
 
@@ -86,7 +145,10 @@ export function HomeView({ page, sort, q }: HomeViewProps) {
               </span>
             </h1>
           ) : (
-            <h1 className="text-xl font-bold">تصفّح المكتبة</h1>
+            <h1 className="flex items-center gap-2 text-xl font-bold">
+              <Sparkles className="h-5 w-5 text-primary" />
+              تصفّح المكتبة
+            </h1>
           )}
           {!list.isLoading && list.data && (
             <p className="mt-0.5 text-sm text-muted-foreground">
