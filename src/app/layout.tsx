@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
 
 const cairo = Cairo({
@@ -45,7 +45,7 @@ export default function RootLayout({
       >
         <Providers>
           {children}
-          <Toaster />
+          <Toaster position="bottom-center" richColors closeButton dir="rtl" />
         </Providers>
       </body>
     </html>

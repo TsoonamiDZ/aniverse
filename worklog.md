@@ -286,3 +286,33 @@ Work Log:
 Stage Summary:
 - scripts/sync-okanime.ts: a working incremental sync tool. Run `bun run scripts/sync-okanime.ts`
   to pull new anime+episodes+watch-links from okanime.xyz into the DB. Verified end-to-end.
+
+---
+Task ID: 16
+Agent: main
+Task: Expose the sync tool inside the website (button + API) so the user can run it.
+
+Work Log:
+- Refactored sync logic into src/lib/sync.ts (exported runSync(opts) → SyncResult),
+  usable from BOTH the CLI and the Next.js API route. Uses the shared @/lib/db.
+- scripts/sync-okanime.ts is now a thin CLI wrapper that calls runSync (still works
+  under `bun run scripts/sync-okanime.ts`).
+- FIX: runSync initially used Bun.spawnSync(curl) — but Next.js dev server runs under
+  Node (Bun global NOT available there) → "Bun is not defined" 500. Switched to
+  node's child_process.spawnSync in src/lib/sync.ts (works in both Bun CLI + Next server).
+- Added POST /api/sync route (src/app/api/sync/route.ts): runs runSync({limit}) and
+  returns {ok, result}. Bounded by limit (default 30 new episodes) so the request
+  finishes quickly; run again to pull more.
+- Added a "تحديث" (Update) button to SiteHeader (RefreshCw icon, spins while loading)
+  that POSTs to /api/sync and shows a sonner toast with the result
+  ("+X أنمي، +Y حلقة، +Z رابط مشاهدة" or "المكتبة محدّثة — لا يوجد جديد").
+- Switched the layout Toaster from the radix-based to the sonner-based one
+  (src/components/ui/sonner) so `toast` from "sonner" works; configured
+  position=bottom-center, richColors, dir=rtl.
+
+Stage Summary:
+- The sync tool is now USABLE FROM THE SITE: header → "تحديث" button → scans okanime
+  sitemaps → adds new anime/episodes/watch-links → toast result. Verified in browser
+  (toast "المكتبة محدّثة — لا يوجد جديد الآن" after the prior sync already pulled
+  the new 1 anime + 1 episode + 8 sources). /api/sync returns {ok:true, result:{…}}.
+  CLI wrapper still works too.
