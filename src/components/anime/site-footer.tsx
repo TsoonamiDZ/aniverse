@@ -62,7 +62,7 @@ export function SiteFooter() {
         <div className="mt-5 flex flex-col items-center gap-3 text-center">
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link href="/" className="text-sm font-bold text-foreground hover:text-primary">
-              أنيقا
+              Aniverse
             </Link>
             <span className="text-border">·</span>
             <a

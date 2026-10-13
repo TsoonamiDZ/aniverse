@@ -52,13 +52,13 @@ export function SiteHeader({ totalAnime }: { totalAnime?: number }) {
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2"
-          aria-label="أنيقا — الصفحة الرئيسية"
+          aria-label="Aniverse — الصفحة الرئيسية"
         >
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-grad-primary text-primary-foreground shadow-md shadow-primary/30">
             <Sparkles className="h-5 w-5" />
           </span>
           <div className="flex flex-col leading-none">
-            <span className="text-lg font-black tracking-tight">أنيقا</span>
+            <span className="text-lg font-black tracking-tight">Aniverse</span>
             <span className="hidden text-[10px] font-medium text-muted-foreground sm:block">
               {totalAnime ? `${totalAnime.toLocaleString("en-US")} أنمي` : "مكتبة الأنمي"}
             </span>

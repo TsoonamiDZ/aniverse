@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 /** GET /api/download → serves the packaged project zip (aniqa-site.zip)
  * so the user can download the whole site + DB + sync tool from the UI. */
 export async function GET() {
-  const file = path.join(process.cwd(), "download", "aniqa-site.zip");
+  const file = path.join(process.cwd(), "download", "aniverse-site.zip");
   if (!fs.existsSync(file)) {
     return NextResponse.json(
       { error: "package_not_built" },
@@ -20,7 +20,7 @@ export async function GET() {
     status: 200,
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": 'attachment; filename="aniqa-site.zip"',
+      "Content-Disposition": 'attachment; filename="aniverse-site.zip"',
       "Content-Length": String(data.length),
       "Cache-Control": "no-store",
     },

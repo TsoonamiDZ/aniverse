@@ -12,7 +12,7 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: "أنيقا · مشاهدة الأنمي والأنميات مترجمة",
+  title: "Aniverse · مشاهدة الأنمي والأنميات مترجمة",
   description:
     "مكتبة أنمي ضخمة بآلاف الأنميات وعشرات الآلاف من الحلقات وروابط المشاهدة المباشرة بجودات متعددة (1080p / 720p / 480p). تصفّح، ابحث، وشاهد أنمياتك المفضلة.",
   keywords: [
@@ -24,12 +24,12 @@ export const metadata: Metadata = {
     "حلقات أنمي",
     "anime",
   ],
-  authors: [{ name: "أنيقا" }],
+  authors: [{ name: "Aniverse" }],
   openGraph: {
-    title: "أنيقا · مشاهدة الأنمي والأنميات مترجمة",
+    title: "Aniverse · مشاهدة الأنمي والأنميات مترجمة",
     description:
       "مكتبة أنمي ضخمة بآلاف الأنميات والحلقات وروابط المشاهدة المباشرة بجودات متعددة.",
-    siteName: "أنيقا",
+    siteName: "Aniverse",
     type: "website",
   },
 };

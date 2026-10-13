@@ -76,17 +76,8 @@ export function Hero({ items }: HeroProps) {
                 }}
               />
             ) : null}
-            {/* Readability gradients */}
-            <div className="absolute inset-0 bg-gradient-to-l from-background via-background/70 to-background/20" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-background/40" />
-            {accent && (
-              <div
-                className="absolute inset-x-0 bottom-0 h-32 opacity-30"
-                style={{
-                  background: `linear-gradient(to top, ${accent}, transparent)`,
-                }}
-              />
-            )}
+            {/* Flat readability overlay (no gradient) */}
+            <div className="absolute inset-0 bg-background/85" />
           </motion.div>
         </AnimatePresence>
 

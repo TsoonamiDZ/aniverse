@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export function HeroSkeleton() {
   return (
     <div className="relative h-[460px] overflow-hidden rounded-2xl border border-border/60 bg-card/40">
-      <div className="absolute inset-0 animate-pulse bg-gradient-to-l from-card via-card/80 to-card/40" />
+      <div className="absolute inset-0 animate-pulse bg-muted" />
       <div className="relative z-10 flex h-full items-center gap-6 p-8">
         <div className="hidden aspect-[2/3] w-48 animate-pulse rounded-xl bg-muted sm:block" />
         <div className="flex-1 space-y-4">

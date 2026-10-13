@@ -7,14 +7,13 @@ interface PosterImageProps {
   src: string;
   alt: string;
   className?: string;
-  /** Show a small quality/count badge overlay children. */
   children?: React.ReactNode;
 }
 
 /**
- * Poster image with graceful fallback: if the remote image fails to load
- * (e.g. hot-linked poster removed), it shows a branded gradient placeholder
- * with the title initial instead of a broken-image icon.
+ * Poster image with graceful fallback: if the remote image fails to load,
+ * shows a flat solid primary placeholder with the title initial.
+ * No gradients — flat surfaces only.
  */
 export function PosterImage({ src, alt, className, children }: PosterImageProps) {
   const [failed, setFailed] = useState(false);
@@ -23,7 +22,7 @@ export function PosterImage({ src, alt, className, children }: PosterImageProps)
     return (
       <div
         className={cn(
-          "relative flex items-center justify-center bg-grad-primary text-primary-foreground/90",
+          "relative flex items-center justify-center bg-primary text-primary-foreground/90",
           className
         )}
         aria-label={alt}
@@ -45,9 +44,8 @@ export function PosterImage({ src, alt, className, children }: PosterImageProps)
         loading="lazy"
         decoding="async"
         onError={() => setFailed(true)}
-        className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
+        className="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.05]"
       />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-transparent" />
       {children}
     </div>
   );

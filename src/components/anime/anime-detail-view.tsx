@@ -147,14 +147,8 @@ export function AnimeDetailView({ slug }: { slug: string }) {
               }}
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-l from-background via-background/80 to-background/50" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-          {accent && (
-            <div
-              className="absolute inset-x-0 bottom-0 h-24 opacity-25"
-              style={{ background: `linear-gradient(to top, ${accent}, transparent)` }}
-            />
-          )}
+          {/* Flat readability overlay (no gradient) */}
+          <div className="absolute inset-0 bg-background/85" />
         </div>
 
         <div className="relative z-10 flex flex-col gap-6 p-5 sm:flex-row sm:p-7 lg:p-9">

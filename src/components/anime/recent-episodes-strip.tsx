@@ -17,16 +17,16 @@ export function RecentEpisodesStrip({ episodes }: { episodes: RecentEpisode[] })
         </h2>
         <span className="text-xs text-muted-foreground">آخر ما أُضيف إلى المكتبة</span>
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
         {episodes.map((e) => (
           <Link
             key={e.id}
             href={`/?watch=${encodeURIComponent(e.id)}`}
-            className="group block w-44 shrink-0 focus:outline-none"
+            className="group block focus:outline-none"
             prefetch={false}
             scroll={false}
           >
-            <article className="overflow-hidden rounded-lg border border-border/50 bg-card/50 transition hover:border-primary/50 hover:shadow-lg hover:shadow-primary/10">
+            <article className="overflow-hidden rounded-lg border border-border/50 bg-card/50 transition hover:border-primary/50">
               <div className="relative aspect-video w-full">
                 <PosterImage src={e.posterUrl} alt={e.animeTitle} className="h-full w-full">
                   <span className="absolute bottom-1.5 right-1.5 rounded bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground shadow">

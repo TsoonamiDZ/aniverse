@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Clock, Sparkles, X } from "lucide-react";
+import { Search, Clock, Sparkles, X, Radio } from "lucide-react";
 import { AnimeCard } from "./anime-card";
 import { Hero } from "./hero";
 import { Pagination } from "./pagination";
 import { RecentEpisodesStrip } from "./recent-episodes-strip";
+import { HomeSidebar } from "./home-sidebar";
 import { AnimeGridSkeleton, HeroSkeleton } from "./skeletons";
 import {
   SORT_LABELS,
@@ -56,6 +57,12 @@ async function fetchRecentEpisodes(): Promise<RecentEpisode[]> {
 async function fetchRecentAnime(): Promise<{ items: AnimeListItem[] }> {
   const r = await fetch("/api/recent/anime?limit=12", { cache: "no-store" });
   if (!r.ok) throw new Error("recent anime failed");
+  return r.json();
+}
+
+async function fetchAiring(): Promise<AnimeListResponse> {
+  const r = await fetch("/api/anime?airing=1&sort=popular&pageSize=12", { cache: "no-store" });
+  if (!r.ok) throw new Error("airing failed");
   return r.json();
 }
 
@@ -121,6 +128,13 @@ export function HomeView({ page, sort, q, filters }: HomeViewProps) {
     enabled: isDefaultBrowse,
     staleTime: 0,
     refetchOnMount: true,
+  });
+
+  const airing = useQuery({
+    queryKey: ["home-airing"],
+    queryFn: fetchAiring,
+    enabled: isDefaultBrowse,
+    staleTime: 60_000,
   });
 
   const genres = useQuery({
@@ -209,29 +223,54 @@ export function HomeView({ page, sort, q, filters }: HomeViewProps) {
         </section>
       )}
 
-      {/* Recent episodes strip (default browse only) */}
-      {isDefaultBrowse && recentEpisodes.data && (
-        <RecentEpisodesStrip episodes={recentEpisodes.data} />
-      )}
+      {/* Two-column layout: main sections + sidebar (default browse only) */}
+      {isDefaultBrowse && (
+        <div className="mb-8 grid gap-6 lg:grid-cols-[1fr_300px]">
+          <div className="space-y-8">
+            {recentEpisodes.data && <RecentEpisodesStrip episodes={recentEpisodes.data} />}
 
-      {/* Recent anime (default browse only) */}
-      {isDefaultBrowse && recentAnime.data && recentAnime.data.items.length > 0 && (
-        <section className="mb-8">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-lg font-bold">
-              <Clock className="h-5 w-5 text-primary" />
-              أحدث الأنميات المضافة
-            </h2>
-            <Link href="/?sort=recent" className="text-xs text-primary hover:underline">
-              عرض الكل
-            </Link>
+            {/* Airing / ongoing */}
+            {airing.data && airing.data.items.length > 0 && (
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-lg font-bold">
+                    <Radio className="h-5 w-5 text-primary" />
+                    أنميات مستمرة
+                  </h2>
+                  <Link href="/?airing=1" className="text-xs text-primary hover:underline">
+                    عرض الكل
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
+                  {airing.data.items.slice(0, 10).map((a) => (
+                    <AnimeCard key={a.id} anime={a} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Recent anime */}
+            {recentAnime.data && recentAnime.data.items.length > 0 && (
+              <section>
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-lg font-bold">
+                    <Clock className="h-5 w-5 text-primary" />
+                    أحدث الأنميات المضافة
+                  </h2>
+                  <Link href="/?sort=recent" className="text-xs text-primary hover:underline">
+                    عرض الكل
+                  </Link>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5">
+                  {recentAnime.data.items.slice(0, 10).map((a) => (
+                    <AnimeCard key={a.id} anime={a} />
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
-            {recentAnime.data.items.slice(0, 12).map((a) => (
-              <AnimeCard key={a.id} anime={a} />
-            ))}
-          </div>
-        </section>
+          <HomeSidebar />
+        </div>
       )}
 
       {/* Genre chips row */}
