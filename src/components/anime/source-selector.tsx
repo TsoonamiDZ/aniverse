@@ -51,7 +51,7 @@ export function SourceSelector({
         <Tv className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-bold">مزوّدات المشاهدة</h3>
         <span className="text-xs text-muted-foreground">
-          ({sources.length.toLocaleString("ar-EG")} رابط)
+          ({sources.length.toLocaleString("en-US")} رابط)
         </span>
       </div>
       <div className="space-y-3">

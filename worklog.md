@@ -402,3 +402,46 @@ Stage Summary:
 - The site is now: a public, recency-organized site at `/` (no admin button) + a separate,
   password-protected standalone admin tool at `/admin` (scan → review list → update DB)
   + the downloadable package (13MB) updated with all of this.
+
+---
+Task ID: 19
+Agent: main
+Task: Top-nav categories + genre filter + schedule + random + Latin numerals + remove okanime refs + real recency.
+
+Work Log:
+- Latin numerals: replaced all toLocaleString("ar-EG") → "en-US" across src; fixed
+  toLocaleDateString("ar-EG") → "en-US" in recent-episodes-strip. Verified no Arabic-Indic
+  digits remain (noOkanime + latin confirmed via browser eval).
+- Removed all okanime.xyz references from the PUBLIC site: dropped "صفحة المصدر"
+  button + empty-state source link (anime-detail-view), "صفحة الحلقة الأصلية" link
+  (watch-view), and the "آخر ما أُضيف على okanime" subtitle (→ "إلى المكتبة"). Kept
+  okanime mention only inside the private /admin tool (admin-facing, not public).
+- Added top-nav (src/components/anime/top-nav.tsx): sticky row under the header with
+  عرض الآن (/?airing=1), أفلام (/?type=MOVIE), أنمي (/?type=TV), أنميات الموسم
+  (/?season=FALL&year=2026 — computed dynamically from today), جدول البث (/?view=schedule),
+  الأعلى تقييماً (/?sort=rating), + a أنمي عشوائي button (fetch /api/anime/random →
+  navigate). Active link highlighting.
+- Extended /api/anime with filters: airing, type, season, year, genre (genres contains).
+- Added /api/anime/random (random metaStatus=ok anime slug).
+- Added /api/genres (distinct genres + counts + Arabic labels for the chips).
+- Added /api/schedule (airing anime with nextEpisodeAirAt grouped by weekday + upcoming).
+- HomeView now accepts HomeFilters {airing,type,season,year,genre}: passes to the API,
+  shows active-filter removable chips, a genre-chips row (18 genres with counts),
+  filter-aware headings (e.g. "تصنيف: Action", "أنميات الخريف 2026"), and preserves
+  filters across pagination/sort links.
+- Built ScheduleView (src/components/anime/schedule-view.tsx): "جدول البث" page with
+  a "قريبًا" horizontal strip (upcoming by nextEpisodeAirAt) + a weekly grid (7 day
+  columns) of airing anime with poster + next-episode time + episode number.
+- Real recency after sync: recent-episodes + recent-anime queries set staleTime:0 +
+  refetchOnMount:true so the homepage always reflects the latest sync when visited.
+- anime-app routes view=schedule → ScheduleView, reads filters into HomeFilters,
+  shows TopNav only on home (not on detail/watch).
+- Verified end-to-end (0 errors): airing=54, movies=187, FALL 2026=44, schedule 30
+  upcoming across 7 days, random returns a slug; TopNav renders (عرض الآن/جدول البث/
+  أنمي عشوائي); Latin numerals confirmed; no okanime in public UI.
+- Rebuilt download/aniqa-site.zip (13MB) with all the new code + schedule + filters.
+
+Stage Summary:
+- Public site now has a category top-nav (Airing/Movies/TV/Season/Schedule/TopRated/
+  Random) + genre filter + broadcast schedule + Latin numerals + no source mentions,
+  and its recent sections always reflect the latest sync.

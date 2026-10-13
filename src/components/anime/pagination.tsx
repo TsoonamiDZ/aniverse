@@ -74,7 +74,7 @@ export function Pagination({ page, totalPages, hrefForPage }: PaginationProps) {
                 : "border-border/60 bg-card/40 text-foreground hover:border-primary/50 hover:bg-accent/40"
             )}
           >
-            {p.toLocaleString("ar-EG")}
+            {p.toLocaleString("en-US")}
           </Link>
         )
       )}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Clock, Sparkles } from "lucide-react";
+import { Search, Clock, Sparkles, X } from "lucide-react";
 import { AnimeCard } from "./anime-card";
 import { Hero } from "./hero";
 import { Pagination } from "./pagination";
@@ -15,13 +15,15 @@ import {
   type RecentEpisode,
   type SortKey,
 } from "@/lib/anime-types";
+import type { HomeFilters } from "./anime-app";
 
 const PAGE_SIZE = 24;
 
 async function fetchList(
   page: number,
   sort: SortKey,
-  q: string
+  q: string,
+  filters: HomeFilters
 ): Promise<AnimeListResponse> {
   const params = new URLSearchParams({
     page: String(page),
@@ -29,6 +31,11 @@ async function fetchList(
     sort,
   });
   if (q) params.set("q", q);
+  if (filters.airing) params.set("airing", "1");
+  if (filters.type) params.set("type", filters.type);
+  if (filters.season) params.set("season", filters.season);
+  if (filters.year != null) params.set("year", String(filters.year));
+  if (filters.genre) params.set("genre", filters.genre);
   const r = await fetch(`/api/anime?${params.toString()}`, { cache: "no-store" });
   if (!r.ok) throw new Error("anime list failed");
   return r.json();
@@ -52,25 +59,51 @@ async function fetchRecentAnime(): Promise<{ items: AnimeListItem[] }> {
   return r.json();
 }
 
+async function fetchGenres(): Promise<{ items: { genre: string; label: string; count: number }[] }> {
+  const r = await fetch("/api/genres", { cache: "no-store" });
+  if (!r.ok) throw new Error("genres failed");
+  return r.json();
+}
+
+const SEASON_AR: Record<string, string> = {
+  WINTER: "الشتاء",
+  SPRING: "الربيع",
+  SUMMER: "الصيف",
+  FALL: "الخريف",
+};
+
+const TYPE_AR: Record<string, string> = {
+  TV: "أنمي (TV)",
+  MOVIE: "أفلام",
+  OVA: "OVA",
+  ONA: "ONA",
+  SPECIAL: "حلقات خاصة",
+  MUSIC: "موسيقى",
+  TV_SHORT: "TV قصير",
+};
+
 interface HomeViewProps {
   page: number;
   sort: SortKey;
   q: string;
+  filters: HomeFilters;
 }
 
-export function HomeView({ page, sort, q }: HomeViewProps) {
+export function HomeView({ page, sort, q, filters }: HomeViewProps) {
   const isSearching = q.trim().length > 0;
-  const isDefaultBrowse = !isSearching && sort === "recent" && page === 1;
+  const hasFilters =
+    filters.airing || filters.type || filters.season || filters.year != null || filters.genre;
+  const isDefaultBrowse = !isSearching && !hasFilters && sort === "recent" && page === 1;
 
   const list = useQuery({
-    queryKey: ["anime-list", page, sort, q],
-    queryFn: () => fetchList(page, sort, q),
+    queryKey: ["anime-list", page, sort, q, filters],
+    queryFn: () => fetchList(page, sort, q, filters),
   });
 
   const hero = useQuery({
     queryKey: ["anime-hero"],
     queryFn: fetchHero,
-    enabled: !isSearching,
+    enabled: isDefaultBrowse,
     staleTime: 10 * 60 * 1000,
   });
 
@@ -78,19 +111,32 @@ export function HomeView({ page, sort, q }: HomeViewProps) {
     queryKey: ["recent-episodes"],
     queryFn: fetchRecentEpisodes,
     enabled: isDefaultBrowse,
-    staleTime: 60 * 1000,
+    staleTime: 0, // always refetch on mount so it reflects the latest sync
+    refetchOnMount: true,
   });
 
   const recentAnime = useQuery({
     queryKey: ["recent-anime"],
     queryFn: fetchRecentAnime,
     enabled: isDefaultBrowse,
-    staleTime: 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+
+  const genres = useQuery({
+    queryKey: ["genres"],
+    queryFn: fetchGenres,
+    staleTime: 5 * 60 * 1000,
   });
 
   const hrefForPage = (p: number) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
+    if (filters.airing) params.set("airing", "1");
+    if (filters.type) params.set("type", filters.type);
+    if (filters.season) params.set("season", filters.season);
+    if (filters.year != null) params.set("year", String(filters.year));
+    if (filters.genre) params.set("genre", filters.genre);
     params.set("sort", sort);
     if (p > 1) params.set("page", String(p));
     const qs = params.toString();
@@ -99,10 +145,65 @@ export function HomeView({ page, sort, q }: HomeViewProps) {
 
   const sorts: SortKey[] = ["recent", "popular", "episodes", "rating", "title", "shuffle"];
 
+  // Active-filter chips (click to remove).
+  const filterChips: { label: string; href: string }[] = [];
+  const baseParams = () => {
+    const p = new URLSearchParams();
+    if (q) p.set("q", q);
+    p.set("sort", sort);
+    return p;
+  };
+  if (filters.airing) {
+    const p = baseParams();
+    if (filters.type) p.set("type", filters.type);
+    if (filters.season) p.set("season", filters.season);
+    if (filters.year != null) p.set("year", String(filters.year));
+    if (filters.genre) p.set("genre", filters.genre);
+    filterChips.push({ label: "عرض الآن", href: `/?${p.toString()}` });
+  }
+  if (filters.type) {
+    const p = baseParams();
+    if (filters.airing) p.set("airing", "1");
+    if (filters.season) p.set("season", filters.season);
+    if (filters.year != null) p.set("year", String(filters.year));
+    if (filters.genre) p.set("genre", filters.genre);
+    filterChips.push({ label: TYPE_AR[filters.type] || filters.type, href: `/?${p.toString()}` });
+  }
+  if (filters.season) {
+    const p = baseParams();
+    if (filters.airing) p.set("airing", "1");
+    if (filters.type) p.set("type", filters.type);
+    if (filters.genre) p.set("genre", filters.genre);
+    filterChips.push({
+      label: `موسم ${SEASON_AR[filters.season] || filters.season}${filters.year ? " " + filters.year : ""}`,
+      href: `/?${p.toString()}`,
+    });
+  }
+  if (filters.genre) {
+    const p = baseParams();
+    if (filters.airing) p.set("airing", "1");
+    if (filters.type) p.set("type", filters.type);
+    if (filters.season) p.set("season", filters.season);
+    if (filters.year != null) p.set("year", String(filters.year));
+    filterChips.push({ label: filters.genre, href: `/?${p.toString()}` });
+  }
+
+  const heading = hasFilters
+    ? filters.genre
+      ? `تصنيف: ${filters.genre}`
+      : filters.type
+      ? TYPE_AR[filters.type] || filters.type
+      : filters.airing
+      ? "عرض الآن"
+      : filters.season
+      ? `أنميات ${SEASON_AR[filters.season] || filters.season}${filters.year ? " " + filters.year : ""}`
+      : "تصفّح المكتبة"
+    : "تصفّح المكتبة";
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       {/* Hero only on default browse */}
-      {!isSearching && (
+      {isDefaultBrowse && (
         <section className="mb-8">
           {hero.isLoading || !hero.data ? <HeroSkeleton /> : <Hero items={hero.data.items} />}
         </section>
@@ -133,6 +234,60 @@ export function HomeView({ page, sort, q }: HomeViewProps) {
         </section>
       )}
 
+      {/* Genre chips row */}
+      {genres.data && genres.data.items.length > 0 && (
+        <section className="mb-5">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+            <span className="shrink-0 text-xs font-bold text-muted-foreground">تصنيفات:</span>
+            {genres.data.items.slice(0, 18).map((g) => {
+              const active = filters.genre === g.genre;
+              const p = new URLSearchParams();
+              if (filters.airing) p.set("airing", "1");
+              if (filters.type) p.set("type", filters.type);
+              if (filters.season) p.set("season", filters.season);
+              if (filters.year != null) p.set("year", String(filters.year));
+              p.set("genre", g.genre);
+              p.set("sort", sort);
+              return (
+                <Link
+                  key={g.genre}
+                  href={`/?${p.toString()}`}
+                  className={
+                    active
+                      ? "shrink-0 rounded-full bg-grad-primary px-3 py-1 text-xs font-bold text-primary-foreground"
+                      : "shrink-0 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-xs text-foreground/70 hover:border-primary/50 hover:text-foreground"
+                  }
+                >
+                  {g.label}
+                  <span className="mr-1 text-[10px] opacity-60" dir="ltr">
+                    {g.count.toLocaleString("en-US")}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Active filter chips */}
+      {filterChips.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          {filterChips.map((c) => (
+            <Link
+              key={c.label}
+              href={c.href}
+              className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary hover:bg-primary/15"
+            >
+              <X className="h-3 w-3" />
+              {c.label}
+            </Link>
+          ))}
+          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground">
+            مسح الكل
+          </Link>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -147,13 +302,13 @@ export function HomeView({ page, sort, q }: HomeViewProps) {
           ) : (
             <h1 className="flex items-center gap-2 text-xl font-bold">
               <Sparkles className="h-5 w-5 text-primary" />
-              تصفّح المكتبة
+              {heading}
             </h1>
           )}
           {!list.isLoading && list.data && (
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {list.data.total.toLocaleString("ar-EG")} أنمي · صفحة{" "}
-              {page.toLocaleString("ar-EG")} من {list.data.totalPages.toLocaleString("ar-EG")}
+              {list.data.total.toLocaleString("en-US")} أنمي · صفحة{" "}
+              {page.toLocaleString("en-US")} من {list.data.totalPages.toLocaleString("en-US")}
             </p>
           )}
         </div>
@@ -162,11 +317,17 @@ export function HomeView({ page, sort, q }: HomeViewProps) {
           <div className="flex flex-wrap items-center gap-1.5">
             {sorts.map((s) => {
               const active = s === sort;
-              const href = `/?sort=${s}`;
+              const p = new URLSearchParams();
+              if (filters.airing) p.set("airing", "1");
+              if (filters.type) p.set("type", filters.type);
+              if (filters.season) p.set("season", filters.season);
+              if (filters.year != null) p.set("year", String(filters.year));
+              if (filters.genre) p.set("genre", filters.genre);
+              p.set("sort", s);
               return (
                 <Link
                   key={s}
-                  href={href}
+                  href={`/?${p.toString()}`}
                   className={
                     active
                       ? "rounded-full bg-grad-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground shadow-md shadow-primary/30"

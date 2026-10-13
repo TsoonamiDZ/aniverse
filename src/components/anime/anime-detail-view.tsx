@@ -261,7 +261,7 @@ export function AnimeDetailView({ slug }: { slug: string }) {
             {anime.animeSource && <MetaRow icon={Tag} label="المصدر">{anime.animeSource}</MetaRow>}
             {anime.episodeCount != null && (
               <MetaRow icon={Layers} label="عدد الحلقات">
-                {anime.episodeCount.toLocaleString("ar-EG")} {anime.malEpisodes && anime.malEpisodes !== anime.episodeCount && (
+                {anime.episodeCount.toLocaleString("en-US")} {anime.malEpisodes && anime.malEpisodes !== anime.episodeCount && (
                   <span className="text-muted-foreground" dir="ltr"> (MAL: {anime.malEpisodes})</span>
                 )}
               </MetaRow>
@@ -343,11 +343,7 @@ export function AnimeDetailView({ slug }: { slug: string }) {
           )}
           {!anime.synopsis && !anime.tags && (
             <div className="rounded-xl border border-dashed border-border/50 p-8 text-center text-sm text-muted-foreground">
-              المعلومات الوصفية لهذا الأنمي غير متوفرة بعد (لم يُعثر عليه في AniList).
-              يمكنك زيارة{" "}
-              <a href={anime.pageUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                صفحة المصدر
-              </a>.
+              المعلومات الوصفية لهذا الأنمي غير متوفرة بعد. جرّب تحديث المكتبة لاحقًا.
             </div>
           )}
         </div>
@@ -360,15 +356,9 @@ export function AnimeDetailView({ slug }: { slug: string }) {
             <Layers className="h-5 w-5 text-primary" />
             الحلقات
             <span className="text-sm font-normal text-muted-foreground">
-              ({anime.episodeCount.toLocaleString("ar-EG")})
+              ({anime.episodeCount.toLocaleString("en-US")})
             </span>
           </h2>
-          <Button asChild variant="ghost" size="sm" className="text-xs text-muted-foreground">
-            <a href={anime.pageUrl} target="_blank" rel="noopener noreferrer">
-              <Link2 className="h-3.5 w-3.5" />
-              المصدر
-            </a>
-          </Button>
         </div>
         {anime.episodes.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border/60 p-10 text-center text-muted-foreground">

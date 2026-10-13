@@ -44,17 +44,17 @@ export function SiteFooter() {
         <div className="flex flex-wrap items-center justify-center gap-2.5">
           <StatPill
             icon={Film}
-            value={stats ? stats.anime.toLocaleString("ar-EG") : "…"}
+            value={stats ? stats.anime.toLocaleString("en-US") : "…"}
             label="أنمي"
           />
           <StatPill
             icon={Tv}
-            value={stats ? stats.episodes.toLocaleString("ar-EG") : "…"}
+            value={stats ? stats.episodes.toLocaleString("en-US") : "…"}
             label="حلقة"
           />
           <StatPill
             icon={Link2}
-            value={stats ? stats.sources.toLocaleString("ar-EG") : "…"}
+            value={stats ? stats.sources.toLocaleString("en-US") : "…"}
             label="رابط مشاهدة"
           />
         </div>

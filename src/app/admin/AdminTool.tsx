@@ -206,13 +206,13 @@ export function AdminTool() {
               {newAnime > 0 && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary ring-1 ring-primary/30">
                   <Film className="h-3.5 w-3.5" />
-                  {newAnime.toLocaleString("ar-EG")} أنمي جديد
+                  {newAnime.toLocaleString("en-US")} أنمي جديد
                 </span>
               )}
               {newEps > 0 && (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-400 ring-1 ring-emerald-500/30">
                   <Tv className="h-3.5 w-3.5" />
-                  {newEps.toLocaleString("ar-EG")} حلقة جديدة
+                  {newEps.toLocaleString("en-US")} حلقة جديدة
                 </span>
               )}
               {nothing && (
@@ -227,7 +227,7 @@ export function AdminTool() {
               <div>
                 <h3 className="mb-2 text-xs font-bold text-muted-foreground">
                   الأنميات الجديدة ({scanResult.previewAnime.length}
-                  {newAnime > scanResult.previewAnime.length ? ` من ${newAnime.toLocaleString("ar-EG")}` : ""})
+                  {newAnime > scanResult.previewAnime.length ? ` من ${newAnime.toLocaleString("en-US")}` : ""})
                 </h3>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                   {scanResult.previewAnime.map((a) => (
@@ -238,7 +238,7 @@ export function AdminTool() {
                       <div className="min-w-0 flex-1 py-0.5">
                         <p className="line-clamp-2 text-xs font-semibold leading-snug">{a.title}</p>
                         <p className="mt-0.5 text-[10px] text-muted-foreground">
-                          {a.episodeCount.toLocaleString("ar-EG")} حلقة
+                          {a.episodeCount.toLocaleString("en-US")} حلقة
                         </p>
                       </div>
                     </div>
@@ -252,7 +252,7 @@ export function AdminTool() {
               <div>
                 <h3 className="mb-2 text-xs font-bold text-muted-foreground">
                   الحلقات الجديدة ({scanResult.previewEpisodes.length}
-                  {newEps > scanResult.previewEpisodes.length ? ` من ${newEps.toLocaleString("ar-EG")}` : ""})
+                  {newEps > scanResult.previewEpisodes.length ? ` من ${newEps.toLocaleString("en-US")}` : ""})
                 </h3>
                 <div className="max-h-96 space-y-1.5 overflow-y-auto pr-1 scrollbar-thin">
                   {scanResult.previewEpisodes.map((e) => (
@@ -335,7 +335,7 @@ function StatCard({
       <Icon className="h-5 w-5 text-primary" />
       <div className="leading-none">
         <div className="text-lg font-black" dir="ltr">
-          {loading ? "…" : value != null ? value.toLocaleString("ar-EG") : "—"}
+          {loading ? "…" : value != null ? value.toLocaleString("en-US") : "—"}
         </div>
         <div className="text-[11px] text-muted-foreground">{label}</div>
       </div>

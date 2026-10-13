@@ -160,7 +160,7 @@ export function Hero({ items }: HeroProps) {
                   )}
                   <span className="inline-flex items-center gap-1 rounded-lg bg-black/50 px-2.5 py-1.5 text-xs font-semibold text-white/90 ring-1 ring-white/10">
                     <Info className="h-3.5 w-3.5 text-primary" />
-                    {current.episodeCount.toLocaleString("ar-EG")} حلقة
+                    {current.episodeCount.toLocaleString("en-US")} حلقة
                   </span>
                 </div>
 

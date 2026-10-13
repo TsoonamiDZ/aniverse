@@ -87,7 +87,7 @@ export function AnimeCard({ anime }: { anime: AnimeListItem }) {
             </p>
           )}
           <p className="mt-1 text-[11px] text-muted-foreground">
-            {anime.episodeCount.toLocaleString("ar-EG")} حلقة
+            {anime.episodeCount.toLocaleString("en-US")} حلقة
           </p>
         </div>
       </article>

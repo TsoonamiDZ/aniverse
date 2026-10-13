@@ -15,7 +15,7 @@ export function RecentEpisodesStrip({ episodes }: { episodes: RecentEpisode[] })
           <span className="inline-block h-5 w-1.5 rounded-full bg-grad-primary" />
           أحدث الحلقات المضافة
         </h2>
-        <span className="text-xs text-muted-foreground">آخر ما أُضيف على okanime</span>
+        <span className="text-xs text-muted-foreground">آخر ما أُضيف إلى المكتبة</span>
       </div>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
         {episodes.map((e) => (
@@ -40,7 +40,7 @@ export function RecentEpisodesStrip({ episodes }: { episodes: RecentEpisode[] })
               <div className="p-2">
                 <p className="line-clamp-1 text-xs font-bold leading-snug">{e.animeTitle}</p>
                 <p className="mt-0.5 text-[10px] text-muted-foreground" dir="ltr">
-                  {e.lastModified ? new Date(e.lastModified).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" }) : ""}
+                  {e.lastModified ? new Date(e.lastModified).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : ""}
                 </p>
               </div>
             </article>

@@ -33,11 +33,21 @@ export async function GET(request: Request) {
     ? sortRaw
     : "recent";
   const q = (sp.get("q") ?? "").trim();
+  const airing = sp.get("airing") === "1" || sp.get("airing") === "true";
+  const type = sp.get("type"); // TV / MOVIE / OVA / ONA / SPECIAL / MUSIC / TV_SHORT
+  const season = sp.get("season"); // WINTER / SPRING / SUMMER / FALL
+  const year = sp.get("year") ? parseInt(sp.get("year")!, 10) : null;
+  const genre = sp.get("genre");
 
   const where: Prisma.AnimeWhereInput = {};
   if (q) {
     where.title = { contains: q };
   }
+  if (airing) where.airing = true;
+  if (type) where.animeType = type;
+  if (season) where.season = season;
+  if (year != null && Number.isFinite(year)) where.airedYear = year;
+  if (genre) where.genres = { contains: genre };
 
   const total = await db.anime.count({ where });
   const totalPages = Math.max(1, Math.ceil(total / pageSize));

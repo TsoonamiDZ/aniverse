@@ -60,7 +60,7 @@ export function SiteHeader({ totalAnime }: { totalAnime?: number }) {
           <div className="flex flex-col leading-none">
             <span className="text-lg font-black tracking-tight">أنيقا</span>
             <span className="hidden text-[10px] font-medium text-muted-foreground sm:block">
-              {totalAnime ? `${totalAnime.toLocaleString("ar-EG")} أنمي` : "مكتبة الأنمي"}
+              {totalAnime ? `${totalAnime.toLocaleString("en-US")} أنمي` : "مكتبة الأنمي"}
             </span>
           </div>
         </Link>

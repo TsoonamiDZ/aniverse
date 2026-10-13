@@ -169,18 +169,13 @@ export function WatchView({ episodeId }: { episodeId: string }) {
             onSelect={setSelectedId}
           />
 
-          {/* Open source page fallback */}
+          {/* Provider note */}
           <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border/50 bg-card/30 p-3 text-xs text-muted-foreground">
             <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
             <span>
               لا يستضيف الموقع أي فيديو. التشغيل عبر مُضمّن المزوّد؛ إن لم يعمل المشغّل،
-              جرّب مزوّدًا آخر أو افتح الرابط في نافذة جديدة.
+              جرّب مزوّدًا آخر أو افتح الرابط في نافذة جديدة من زر «نافذة جديدة».
             </span>
-            <Button asChild size="sm" variant="outline" className="ml-auto h-7 text-xs">
-              <a href={e.episodePageUrl} target="_blank" rel="noopener noreferrer">
-                صفحة الحلقة الأصلية
-              </a>
-            </Button>
           </div>
         </div>
 
