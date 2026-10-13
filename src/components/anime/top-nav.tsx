@@ -41,8 +41,8 @@ const SEASON_AR: Record<string, string> = {
 
 const NAV = [
   { key: "airing", label: "عرض الآن", icon: Radio, href: "/?airing=1" },
-  { key: "movies", label: "أفلام", icon: Film, href: "/?type=MOVIE" },
-  { key: "tv", label: "أنمي", icon: Tv, href: "/?type=TV" },
+  { key: "movies", label: "أفلام", icon: Film, href: "/?view=library&type=MOVIE" },
+  { key: "anime", label: "أنمي", icon: Tv, href: "/?view=library" },
   { key: "season", label: "أنميات الموسم", icon: CalendarDays }, // href built dynamically
   { key: "schedule", label: "جدول البث", icon: CalendarRange, href: "/?view=schedule" },
   { key: "rating", label: "الأعلى تقييماً", icon: Star, href: "/?sort=rating" },
@@ -58,10 +58,10 @@ export function TopNav() {
   const seasonHref = `/?season=${season}&year=${year}`;
 
   // Active link detection.
-  const isActive = (key: string, href: string) => {
+  const isActive = (key: string, _href: string) => {
     if (key === "airing") return sp.get("airing") === "1";
-    if (key === "movies") return sp.get("type") === "MOVIE";
-    if (key === "tv") return sp.get("type") === "TV";
+    if (key === "movies") return sp.get("view") === "library" && sp.get("type") === "MOVIE";
+    if (key === "anime") return sp.get("view") === "library" && (!sp.get("type") || sp.get("type") === "TV");
     if (key === "season") return sp.get("season") === season && sp.get("year") === String(year);
     if (key === "schedule") return sp.get("view") === "schedule";
     if (key === "rating") return sp.get("sort") === "rating";

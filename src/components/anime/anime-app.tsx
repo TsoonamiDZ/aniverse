@@ -32,6 +32,7 @@ export function AnimeApp() {
   const pageRaw = parseInt(sp.get("page") ?? "1", 10);
   const page = Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
   const isSchedule = sp.get("view") === "schedule";
+  const isLibrary = sp.get("view") === "library";
 
   const filters: HomeFilters = {
     airing: sp.get("airing") === "1" || sp.get("airing") === "true",
@@ -70,7 +71,7 @@ export function AnimeApp() {
         ) : view.kind === "schedule" ? (
           <ScheduleView />
         ) : (
-          <HomeView page={page} sort={sort} q={q} filters={filters} />
+          <HomeView page={page} sort={sort} q={q} filters={filters} libraryMode={isLibrary} />
         )}
       </main>
       <SiteFooter />

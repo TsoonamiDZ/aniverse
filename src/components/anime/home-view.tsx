@@ -94,13 +94,19 @@ interface HomeViewProps {
   sort: SortKey;
   q: string;
   filters: HomeFilters;
+  libraryMode?: boolean;
 }
 
-export function HomeView({ page, sort, q, filters }: HomeViewProps) {
+export function HomeView({ page, sort, q, filters, libraryMode = false }: HomeViewProps) {
   const isSearching = q.trim().length > 0;
   const hasFilters =
     filters.airing || filters.type || filters.season || filters.year != null || filters.genre;
-  const isDefaultBrowse = !isSearching && !hasFilters && sort === "recent" && page === 1;
+  // Library mode: explicit ?view=library, OR any filter/search/sort/page>1 → show the
+  // browse-with-filters UI (genre chips, type filter, grid, pagination).
+  const isLibrary =
+    libraryMode || isSearching || hasFilters || sort !== "recent" || page > 1;
+  // Homepage mode: the default `/` — content sections only, no browse grid / no genre chips.
+  const isHomepage = !isLibrary;
 
   const list = useQuery({
     queryKey: ["anime-list", page, sort, q, filters],
@@ -110,14 +116,14 @@ export function HomeView({ page, sort, q, filters }: HomeViewProps) {
   const hero = useQuery({
     queryKey: ["anime-hero"],
     queryFn: fetchHero,
-    enabled: isDefaultBrowse,
+    enabled: isHomepage,
     staleTime: 10 * 60 * 1000,
   });
 
   const recentEpisodes = useQuery({
     queryKey: ["recent-episodes"],
     queryFn: fetchRecentEpisodes,
-    enabled: isDefaultBrowse,
+    enabled: isHomepage,
     staleTime: 0, // always refetch on mount so it reflects the latest sync
     refetchOnMount: true,
   });
@@ -125,7 +131,7 @@ export function HomeView({ page, sort, q, filters }: HomeViewProps) {
   const recentAnime = useQuery({
     queryKey: ["recent-anime"],
     queryFn: fetchRecentAnime,
-    enabled: isDefaultBrowse,
+    enabled: isHomepage,
     staleTime: 0,
     refetchOnMount: true,
   });
@@ -133,7 +139,7 @@ export function HomeView({ page, sort, q, filters }: HomeViewProps) {
   const airing = useQuery({
     queryKey: ["home-airing"],
     queryFn: fetchAiring,
-    enabled: isDefaultBrowse,
+    enabled: isHomepage,
     staleTime: 60_000,
   });
 
@@ -217,14 +223,14 @@ export function HomeView({ page, sort, q, filters }: HomeViewProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
       {/* Hero only on default browse */}
-      {isDefaultBrowse && (
+      {isHomepage && (
         <section className="mb-8">
           {hero.isLoading || !hero.data ? <HeroSkeleton /> : <Hero items={hero.data.items} />}
         </section>
       )}
 
       {/* Two-column layout: main sections + sidebar (default browse only) */}
-      {isDefaultBrowse && (
+      {isHomepage && (
         <div className="mb-8 grid gap-6 lg:grid-cols-[1fr_300px]">
           <div className="space-y-8">
             {recentEpisodes.data && <RecentEpisodesStrip episodes={recentEpisodes.data} />}
@@ -272,6 +278,44 @@ export function HomeView({ page, sort, q, filters }: HomeViewProps) {
           <HomeSidebar />
         </div>
       )}
+
+      {/* Library mode: type filter + genre chips + filters + grid (only when browsing) */}
+      {isLibrary && (
+        <>
+      {/* Type filter (All / TV / Movie / ...) */}
+      <div className="mb-4 flex flex-wrap items-center gap-1.5">
+        {[
+          { v: null, label: "الكل" },
+          { v: "TV", label: "أنمي" },
+          { v: "MOVIE", label: "أفلام" },
+          { v: "ONA", label: "ONA" },
+          { v: "OVA", label: "OVA" },
+          { v: "SPECIAL", label: "حلقات خاصة" },
+        ].map((t) => {
+          const active = (filters.type ?? null) === t.v;
+          const p = new URLSearchParams();
+          if (filters.airing) p.set("airing", "1");
+          if (t.v) p.set("type", t.v!);
+          if (filters.season) p.set("season", filters.season);
+          if (filters.year != null) p.set("year", String(filters.year));
+          if (filters.genre) p.set("genre", filters.genre);
+          p.set("sort", sort);
+          if (page > 1) p.set("page", String(page));
+          return (
+            <Link
+              key={t.label}
+              href={`/?${p.toString()}`}
+              className={
+                active
+                  ? "rounded-md bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+                  : "rounded-md border border-border/60 bg-card/40 px-3 py-1.5 text-xs font-medium text-foreground/80 hover:border-primary/50"
+              }
+            >
+              {t.label}
+            </Link>
+          );
+        })}
+      </div>
 
       {/* Genre chips row */}
       {genres.data && genres.data.items.length > 0 && (
@@ -406,6 +450,8 @@ export function HomeView({ page, sort, q, filters }: HomeViewProps) {
           />
         </>
       )}
+      </>
+    )}
     </div>
   );
 }
