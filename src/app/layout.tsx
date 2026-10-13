@@ -3,6 +3,7 @@ import { Cairo } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "@/components/providers";
+import { KeepAlive } from "@/components/anime/keep-alive";
 
 const cairo = Cairo({
   variable: "--font-cairo",
@@ -45,6 +46,7 @@ export default function RootLayout({
       >
         <Providers>
           {children}
+          <KeepAlive />
           <Toaster position="bottom-center" richColors closeButton dir="rtl" />
         </Providers>
       </body>
