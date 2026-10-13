@@ -251,3 +251,38 @@ Work Log:
 
 Stage Summary:
 - Site verified end-to-end: rich MAL data, professional cinematic UI, 0 errors.
+
+---
+Task ID: 15
+Agent: main
+Task: Build a sync tool that scans ww3.okanime.xyz and adds NEW anime/episodes to the DB.
+
+Work Log:
+- Inspected site structure: sitemap.xml → sitemapindex with sitemap-anime-{1,2,3}.xml +
+  sitemap-episodes-{1..6}.xml. Each urlset entry = /anime/{slug} or /episode/{slug} + lastmod.
+- Inspected an episode page HTML: watch sources are <a> anchors with Alpine bindings:
+    :class="activeUrl === '<embedURL>' ? 'active':''"  x-show="matchesQuality('FHD')"
+    data-server="<provider>"  + data-umami-event-mal_id="<animeMalId>"
+    data-umami-event-episode_number="<n>"
+  Episode metadata from og:title / og:image / the /anime/{slug} link.
+- Inspected an anime page: og:title ("انمي One Piece مترجم..."), og:image (poster),
+  episode links href=".../episode/{slug}-episode-N" (counted → episodeCount).
+- Built scripts/sync-okanime.ts:
+  * Fetches sitemap index + sub-sitemaps (via curl through Bun.spawnSync — Bun fetch is
+    WAF-blocked on some sites, curl is reliable).
+  * Diffs anime/episode slugs vs DB ids → finds NEW ones.
+  * For new episodes: fetches page, extracts (title, animeId, animeTitle, episodeNumber,
+    posterUrl, malId, watchSources[]), ensures the anime row exists (fetch+insert if new),
+    inserts the episode + its WatchSources, increments anime.episodeCount/sourceCount,
+    and sets anime.malId as a side-enrichment.
+  * For new anime (no new episodes): fetches page, extracts title/poster/episodeCount, inserts.
+  * Idempotent + resumable: re-running skips anything already in the DB.
+  * CLI: --dry-run, --episodes-only, --anime-only, --limit N, --since YYYY-MM-DD.
+- Tested --dry-run --episodes-only: parsed 25,868 episode sitemap entries, found 2 NEW
+  (keroro-gunsou-episode-2 with 12 sources; shiotaiou-...-episode-2 with 8 sources).
+- Ran the REAL sync: inserted both episodes + 20 watch sources; verified in DB
+  (keroro-gunsou-episode-2 → 12 sources: FHD/mp4upload, FHD/mega, HD/mp4upload, ...).
+
+Stage Summary:
+- scripts/sync-okanime.ts: a working incremental sync tool. Run `bun run scripts/sync-okanime.ts`
+  to pull new anime+episodes+watch-links from okanime.xyz into the DB. Verified end-to-end.
