@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Search, X, Sparkles, RefreshCw } from "lucide-react";
+import { Search, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { ThemeToggle } from "./theme-toggle";
+import { SyncButton } from "./sync-button";
 
 export function SiteHeader({ totalAnime }: { totalAnime?: number }) {
   const router = useRouter();
@@ -110,61 +110,5 @@ export function SiteHeader({ totalAnime }: { totalAnime?: number }) {
         </div>
       </div>
     </header>
-  );
-}
-
-/** "Update library" button — scans okanime.xyz sitemaps and adds new episodes. */
-function SyncButton() {
-  const [loading, setLoading] = useState(false);
-
-  const runSync = async () => {
-    setLoading(true);
-    const tid = toast.loading("جارٍ فحص okanime وإضافة الجديد…", { duration: Infinity });
-    try {
-      const r = await fetch("/api/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ limit: 30 }),
-      });
-      const data = await r.json();
-      if (!r.ok || !data.ok) {
-        throw new Error(data.error || "فشل التحديث");
-      }
-      const res = data.result;
-      const addedEps = res.insertedEpisodes ?? 0;
-      const addedAnime = res.insertedAnime ?? 0;
-      const addedSrc = res.insertedSources ?? 0;
-      if (addedEps === 0 && addedAnime === 0) {
-        toast.success("المكتبة محدّثة — لا يوجد جديد الآن", { id: tid });
-      } else {
-        toast.success(
-          `تم! +${addedAnime} أنمي، +${addedEps} حلقة، +${addedSrc} رابط مشاهدة${
-            res.newEpisodesInSitemap > addedEps
-              ? ` (يوجد ${res.newEpisodesInSitemap - addedEps} حلقة أخرى — اضغط مجدداً للمزيد)`
-              : ""
-          }`,
-          { id: tid, duration: 8000 }
-        );
-      }
-    } catch (e) {
-      toast.error("تعذّر التحديث: " + (e instanceof Error ? e.message : "خطأ"), { id: tid });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      onClick={runSync}
-      disabled={loading}
-      className="gap-1.5 text-foreground/80 hover:text-foreground"
-      aria-label="تحديث المكتبة"
-      title="افحص okanime وأضف الحلقات الجديدة"
-    >
-      <RefreshCw className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
-      <span className="hidden md:inline">تحديث</span>
-    </Button>
   );
 }

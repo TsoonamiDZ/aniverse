@@ -24,6 +24,21 @@ export interface SyncOptions {
   onProgress?: (msg: string) => void;
 }
 
+export interface PreviewAnime {
+  slug: string;
+  title: string;
+  posterUrl: string;
+  episodeCount: number;
+}
+export interface PreviewEpisode {
+  slug: string;
+  title: string;
+  animeId: string;
+  animeTitle: string;
+  episodeNumber: string;
+  sourcesCount: number;
+}
+
 export interface SyncResult {
   sitemapAnime: number;
   sitemapEpisodes: number;
@@ -34,6 +49,10 @@ export interface SyncResult {
   insertedSources: number;
   failed: number;
   durationMs: number;
+  /** Populated in dry-run mode: the new anime found (capped). */
+  previewAnime: PreviewAnime[];
+  /** Populated in dry-run mode: the new episodes found (capped). */
+  previewEpisodes: PreviewEpisode[];
 }
 
 export function syncLog(opts: SyncOptions, msg: string) {
@@ -246,7 +265,10 @@ export async function runSync(opts: SyncOptions = {}): Promise<SyncResult> {
     insertedSources: 0,
     failed: 0,
     durationMs: 0,
+    previewAnime: [],
+    previewEpisodes: [],
   };
+  const PREVIEW_CAP = 60;
 
   const sinceTs = opts.since ? new Date(opts.since).getTime() : 0;
 
@@ -285,7 +307,22 @@ export async function runSync(opts: SyncOptions = {}): Promise<SyncResult> {
         await sleep(DELAY_MS);
       }
     } else {
+      // Dry-run: fetch up to PREVIEW_CAP new anime pages to build the preview list.
       res.insertedAnime = newSlugs.length;
+      for (const slug of newSlugs.slice(0, PREVIEW_CAP)) {
+        const html = curlText(`${BASE}/anime/${slug}`);
+        if (!html) continue;
+        const a = extractAnime(html, slug);
+        if (a) {
+          res.previewAnime.push({
+            slug,
+            title: a.title,
+            posterUrl: a.posterUrl,
+            episodeCount: a.episodeCount,
+          });
+        }
+        await sleep(DELAY_MS);
+      }
     }
   }
 
@@ -306,7 +343,11 @@ export async function runSync(opts: SyncOptions = {}): Promise<SyncResult> {
     const existing = new Set((await db.episode.findMany({ select: { id: true } })).map((e) => e.id));
     const newSlugs = [...allSlugs].filter((s) => !existing.has(s));
     res.newEpisodesInSitemap = newSlugs.length;
-    const toProcess = opts.limit ? newSlugs.slice(0, opts.limit) : newSlugs;
+    const toProcess = opts.dryRun
+      ? newSlugs.slice(0, Math.min(opts.limit || PREVIEW_CAP, PREVIEW_CAP))
+      : opts.limit
+      ? newSlugs.slice(0, opts.limit)
+      : newSlugs;
     syncLog(
       opts,
       `[sync] episodes: ${allSlugs.size} in sitemap, ${newSlugs.length} new${opts.limit ? ` (capping at ${opts.limit})` : ""}`
@@ -366,6 +407,16 @@ export async function runSync(opts: SyncOptions = {}): Promise<SyncResult> {
         } else {
           res.insertedEpisodes++;
           res.insertedSources += ep.sources.length;
+          if (res.previewEpisodes.length < PREVIEW_CAP) {
+            res.previewEpisodes.push({
+              slug,
+              title: ep.title,
+              animeId: ep.animeId,
+              animeTitle: ep.animeTitle,
+              episodeNumber: ep.episodeNumber,
+              sourcesCount: ep.sources.length,
+            });
+          }
         }
       } catch {
         res.failed++;

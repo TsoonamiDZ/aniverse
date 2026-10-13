@@ -316,3 +316,43 @@ Stage Summary:
   (toast "المكتبة محدّثة — لا يوجد جديد الآن" after the prior sync already pulled
   the new 1 anime + 1 episode + 8 sources). /api/sync returns {ok:true, result:{…}}.
   CLI wrapper still works too.
+
+---
+Task ID: 17
+Agent: main
+Task: Two-step sync UI (scan → preview list → update) + downloadable project package.
+
+Work Log:
+- Extended src/lib/sync.ts runSync() to return preview lists in dry-run mode:
+  previewAnime[] ({slug,title,posterUrl,episodeCount}) and
+  previewEpisodes[] ({slug,title,animeId,animeTitle,episodeNumber,sourcesCount}),
+  capped at 60 so the scan stays fast. Dry-run fetches the new episode/anime pages
+  to extract real titles for the preview.
+- Built src/components/anime/sync-button.tsx: a two-step flow inside a Dialog:
+  Phase idle → scanning (spinner) → review (shows badges "X أنمي جديد / Y حلقة
+  جديدة" + poster grid of new anime + scrollable list of new episodes with episode
+  number + sources count) → updating → done. The "تحديث قاعدة البيانات" button
+  runs the real insert, then invalidates react-query caches + router.refresh so
+  new items appear on-page immediately.
+- Replaced the old inline SyncButton in site-header with the new component.
+- Verified end-to-end in the browser: clicked تحديث → scan → modal "نتيجة الفحص"
+  with إلغاء / تحديث قاعدة البيانات buttons → confirmed → DB grew
+  2186→2187 anime, 25866→25869 episodes, 149216→149244 sources (+1 anime, +3 eps,
+  +28 sources). 0 console errors.
+
+- Downloadable package:
+  * Wrote README.md (setup: unzip → bun install → bun run db:push → bun run dev;
+    documents the two-step update tool + CLI scripts + enrichment scripts).
+  * Built download/aniqa-site.zip (13MB; the 77MB SQLite DB compresses to ~12MB).
+    Includes all src/, prisma/, scripts/, db/custom.db, package.json, configs,
+    README. Excludes node_modules/.next/upload/tests/skills/.git/.zscripts/logs.
+  * Added GET /api/download route serving the zip with
+    Content-Disposition: attachment; filename="aniqa-site.zip".
+  * Added a "نزّل المشروع (zip)" link in the site footer (Download icon).
+  * Verified: /api/download → 200, content-length 12,695,192, application/zip;
+    full download succeeds; footer link renders.
+
+Stage Summary:
+- The site now ships a two-step visual update tool (scan → review list → update DB)
+  AND a one-click project download (zip with DB + tool) so the user can run it
+  locally. All verified working.
