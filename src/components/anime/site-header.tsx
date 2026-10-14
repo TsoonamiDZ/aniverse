@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Search, X, Sparkles } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "./theme-toggle";
@@ -54,15 +54,16 @@ export function SiteHeader({ totalAnime }: { totalAnime?: number }) {
           className="flex shrink-0 items-center gap-2"
           aria-label="Aniverse — الصفحة الرئيسية"
         >
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-grad-primary text-primary-foreground shadow-md shadow-primary/30">
-            <Sparkles className="h-5 w-5" />
-          </span>
-          <div className="flex flex-col leading-none">
-            <span className="text-lg font-black tracking-tight">Aniverse</span>
+          <img
+            src="/aniverse-logo.png"
+            alt="Aniverse"
+            className="h-8 w-auto invert dark:invert-0"
+          />
+          {totalAnime ? (
             <span className="hidden text-[10px] font-medium text-muted-foreground sm:block">
-              {totalAnime ? `${totalAnime.toLocaleString("en-US")} أنمي` : "مكتبة الأنمي"}
+              {totalAnime.toLocaleString("en-US")} أنمي
             </span>
-          </div>
+          ) : null}
         </Link>
 
         <form

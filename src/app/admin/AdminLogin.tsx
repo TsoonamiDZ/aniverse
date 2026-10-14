@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Lock, KeyRound } from "lucide-react";
+import { Lock, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -36,9 +36,7 @@ export function AdminLogin() {
     <div className="flex min-h-screen items-center justify-center bg-grad-primary/5 p-4">
       <div className="w-full max-w-md overflow-hidden rounded-2xl border border-border/60 bg-card/80 shadow-2xl backdrop-blur">
         <div className="bg-grad-primary px-6 py-8 text-center text-primary-foreground">
-          <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-white/15">
-            <ShieldCheck className="h-7 w-7" />
-          </div>
+          <img src="/aniverse-logo.png" alt="Aniverse" className="mx-auto mb-3 h-10 w-auto" />
           <h1 className="text-2xl font-black">أداة تحديث المكتبة</h1>
           <p className="mt-1 text-sm text-primary-foreground/80">
             واجهة إدارية محمية — للصاحب فقط

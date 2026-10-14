@@ -61,8 +61,8 @@ export function SiteFooter() {
 
         <div className="mt-5 flex flex-col items-center gap-3 text-center">
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link href="/" className="text-sm font-bold text-foreground hover:text-primary">
-              Aniverse
+            <Link href="/" className="inline-flex items-center" aria-label="Aniverse — الصفحة الرئيسية">
+              <img src="/aniverse-logo.png" alt="Aniverse" className="h-7 w-auto invert dark:invert-0" />
             </Link>
             <span className="text-border">·</span>
             <a
