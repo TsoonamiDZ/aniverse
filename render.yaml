@@ -1,0 +1,25 @@
+# Render Blueprint — connect your GitHub repo on render.com and Render reads this
+# file to auto-create the web service + a persistent disk + run the Dockerfile.
+# Zero manual config: just click "Connect" → "Apply".
+services:
+  - type: web
+    name: aniverse
+    runtime: docker
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    autoDeploy: true
+    # Persistent disk so SQLite writes (sync tool) survive redeploys.
+    disk:
+      name: data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: PERSIST_DIR
+        value: /data
+      # Set this to a strong password (in Render's dashboard, mark as secret):
+      - key: ADMIN_PASSWORD
+        sync: false
