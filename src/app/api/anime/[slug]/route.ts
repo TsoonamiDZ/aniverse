@@ -65,7 +65,8 @@ export async function GET(
 
   const episodes = await db.episode.findMany({
     where: { animeId: anime.id },
-    orderBy: [{ episodeSort: "asc" }, { episodeNumber: "asc" }],
+    // Newest episode first (the latest-added/highest-numbered at the top).
+    orderBy: [{ episodeSort: "desc" }, { episodeNumber: "desc" }],
     select: {
       id: true,
       slug: true,

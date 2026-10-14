@@ -109,7 +109,11 @@ export function AnimeDetailView({ slug }: { slug: string }) {
   }
 
   const anime = q.data;
-  const firstEpisode = anime.episodes[0];
+  // Episodes are ordered newest-first (desc). The "watch first episode" button
+  // should link to the lowest-numbered episode — find it explicitly.
+  const firstEpisode = anime.episodes.length
+    ? anime.episodes.reduce((min, e) => (e.episodeSort < min.episodeSort ? e : min))
+    : undefined;
   const poster = pickPoster(anime.coverImage, anime.posterUrl);
   const banner = anime.bannerImage || poster;
   const accent = anime.coverColor || undefined;

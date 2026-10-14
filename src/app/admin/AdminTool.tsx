@@ -106,6 +106,11 @@ export function AdminTool() {
         { id: tid, duration: 8000 }
       );
       qc.invalidateQueries({ queryKey: ["stats"] });
+      qc.invalidateQueries({ queryKey: ["recent-episodes"] });
+      qc.invalidateQueries({ queryKey: ["recent-anime"] });
+      qc.invalidateQueries({ queryKey: ["home-airing"] });
+      qc.invalidateQueries({ queryKey: ["anime-list"] });
+      qc.invalidateQueries({ queryKey: ["anime-hero"] });
       setPhase("done");
       setTimeout(() => {
         setPhase("idle");

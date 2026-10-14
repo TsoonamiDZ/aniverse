@@ -5,16 +5,17 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/recent/episodes?limit=16
- * Newest episodes by okanime's lastModified (the live "recently added" feed),
- * joined with the parent anime for poster/title.
+ * Newest ADDED episodes — ordered by when they were added to OUR catalog
+ * (importedAt desc), so newly-synced episodes always appear at the top regardless
+ * of the source site's lastModified. lastModified is a secondary tiebreaker so
+ * the initial bulk import is ordered by the source's recency.
  */
 export async function GET(request: Request) {
   const sp = new URL(request.url).searchParams;
   const limit = Math.min(40, Math.max(1, parseInt(sp.get("limit") ?? "16", 10) || 16));
 
   const episodes = await db.episode.findMany({
-    where: { lastModified: { not: null } },
-    orderBy: [{ lastModified: "desc" }, { importedAt: "desc" }],
+    orderBy: [{ importedAt: "desc" }, { lastModified: "desc" }],
     take: limit,
     select: {
       id: true,
