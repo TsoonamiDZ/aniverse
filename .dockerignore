@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+upload
+download
+tests
+examples
+skills
+*.log
+dev.log
+server.log
+enrich.log
+worklog.md
+.DS_Store

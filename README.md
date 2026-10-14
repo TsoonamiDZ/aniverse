@@ -94,12 +94,34 @@ libSQL بعيدة متوافقة مع SQLite، مجانية، تعمل على se
 > الآن عند استخدام أداة التحديث (`/admin`)، تُكتب الإضافات في Turso (بعيدة)
 > فتبقى دائمة عبر كل الاستدعاءات.
 
-### نشر على خادم Node.js/VPS (بديل)
-على خادم دائم (Railway، Render، Fly.io، VPS) يعمل بـ`bun run start`، تعمل SQLite
-الملفية كما هي بدون Turso (نظام الملفات دائم هناك):
+### نشر على استضافة دائمة (SQLite يعمل كما هو) — موصى به
+
+على خادم بنظام ملفات **دائم قابل للكتابة**، تعمل SQLite الملفية بدون Turso ولا ترحيل.
+المشروع جاهز بـ`Dockerfile` + `start.sh` يبذّر التخزين الدائم تلقائياً.
+
+#### 🟢 Render (أسهل، واجهة رسومية مثل Vercel)
+1. ارفع المشروع إلى GitHub (يضمّن `db/custom.db` + `Dockerfile` + `start.sh`).
+2. https://render.com → **New → Web Service → اربط مستودع GitHub**.
+3. Render يكتشف `Dockerfile` تلقائياً → Build/Run جاهزان.
+4. **أضف قرصاً دائماً**: Settings → Disks → Add Disk → اسم `data`، مسار `/data`، حجم 1GB.
+5. اضبط متغيرات البيئة: `ADMIN_PASSWORD` = كلمة سر قوية.
+6. Deploy → يعمل الموقع + الأنميات الجديدة (عبر `/admin`) تبقى دائمة.
+
+#### 🔵 Fly.io (مجاني بالكامل)
 ```bash
-bun install && bun run db:push && bun run build && bun run start
+# ثبّت flyctl من https://fly.io/docs/hands-on/install-flyctl
+fly launch            # يقرأ fly.toml + Dockerfile، يُنشئ التطبيق
+fly volumes create data --size 1   # التخزين الدائم
+fly deploy
+# اضبط ADMIN_PASSWORD: fly secrets set ADMIN_PASSWORD=<كلمة-قوية>
 ```
+
+#### 🟠 Railway / VPS / Render VPS
+- **Railway**: اربط المستودع، أضف Volume على `/data`، Start Command = `bash start.sh`.
+- **VPS** (Oracle Cloud مجاني دائماً): انسخ المشروع، `bun install && bun run db:push && bun run build && bash start.sh`.
+
+> على أيّها، `start.sh` يتحقق: إن كان القرص الدائم فارغاً، ينسخ قاعدة البيانات المُحزَّمة
+> إليه في أول تشغيل. بعدها كل الكتابات (أداة التحديث) تدوم على القرص الدائم.
 
 ## سكريبتات إثراء إضافية (اختيارية)
 
