@@ -1,21 +1,22 @@
-"use client";
-
 import { Suspense } from "react";
 import { AnimeApp } from "@/components/anime/anime-app";
-import { SiteHeader } from "@/components/anime/site-header";
-import { SiteFooter } from "@/components/anime/site-footer";
 
+// Force dynamic rendering — the page drives its state from URL searchParams
+// (via useSearchParams in client components), so it must NOT be statically
+// prerendered at build time. This avoids the "useSearchParams should be wrapped
+// in a suspense boundary" prerender error during `next build`.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+/** Plain boot skeleton (no useSearchParams-having components) shown while the
+ * client shell hydrates. */
 function AppBootSkeleton() {
-  // Minimal shell shown while searchParams resolve.
   return (
-    <div className="flex min-h-screen flex-col">
-      <SiteHeader />
-      <main className="flex-1">
-        <div className="mx-auto max-w-7xl px-4 py-20 text-center text-muted-foreground">
-          جارٍ التحميل…
-        </div>
+    <div className="flex min-h-screen flex-col bg-background">
+      <div className="h-16 border-b border-border/60 bg-background/80" />
+      <main className="flex flex-1 items-center justify-center">
+        <div className="animate-pulse text-sm text-muted-foreground">جارٍ التحميل…</div>
       </main>
-      <SiteFooter />
     </div>
   );
 }
