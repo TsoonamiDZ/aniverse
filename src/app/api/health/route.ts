@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, getResolvedDbPath } from "@/lib/db";
+import { db, getResolvedDbUrl } from "@/lib/db";
 import * as fs from "fs";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 /** GET /api/health — diagnostic: is the DB reachable + populated?
  * Visit this URL on your deploy host to see why the site might be blank. */
 export async function GET() {
-  const dbUrl = getResolvedDbPath();
+  const dbUrl = getResolvedDbUrl();
   const info: Record<string, unknown> = {
     ok: false,
     time: new Date().toISOString(),

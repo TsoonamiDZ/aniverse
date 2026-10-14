@@ -1,15 +1,21 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaLibSql } from '@prisma/adapter-libsql'
+import { createClient } from '@libsql/client'
 import * as path from 'path'
 import * as fs from 'fs'
 
 /**
- * Database client that works in BOTH environments:
- *  - Local dev / sandbox:  DATABASE_URL = file:./db/custom.db  → default PrismaClient (SQLite file).
- *  - Vercel / serverless:  DATABASE_URL = libsql://<turso>?authToken=... → PrismaClient with the
- *    libSQL driver adapter (Turso), which works on ephemeral serverless filesystems.
+ * Database client — works in BOTH environments:
+ *  - Local dev / sandbox:  DATABASE_URL = file:./db/custom.db (or unset → auto-resolved)
+ *                         → default PrismaClient (local SQLite file).
+ *  - Vercel / serverless:  DATABASE_URL = libsql://<turso>?authToken=...
+ *                         → PrismaClient with the libSQL driver adapter (Turso, remote).
  *
- * The schema stays `provider = "sqlite"` (libSQL is SQLite-compatible) — only the connection
- * differs, so no schema churn between dev and prod.
+ * The schema stays `provider = "sqlite"` (libSQL is SQLite-compatible) — only the
+ * connection differs, so writes PERSIST on Vercel when using Turso.
+ *
+ * Construction is fully SYNCHRONOUS (createClient + PrismaLibSQL + PrismaClient are
+ * all sync), so existing `db.anime.findMany(...)` call sites work unchanged.
  */
 
 /** Resolve a robust local SQLite file path (project-root/db/custom.db). */
@@ -32,69 +38,35 @@ function isLibSqlUrl(url: string): boolean {
   return url.startsWith('libsql://') || url.startsWith('libsql:') || url.startsWith('wss://')
 }
 
-async function createPrismaClient(): Promise<PrismaClient> {
+function createPrismaClient(): PrismaClient {
   const url = process.env.DATABASE_URL || resolveLocalSqliteUrl()
 
-  // Remote libSQL (Turso) → use the driver adapter.
+  // Remote libSQL (Turso) → use the driver adapter so writes persist on serverless.
   if (isLibSqlUrl(url)) {
-    const { PrismaLibSQL } = await import('@prisma/adapter-libsql')
-    const { createClient } = await import('@libsql/client')
-    // authToken may be in the URL query (?authToken=...) — pass url as-is; the libsql
-    // client parses it. Also allow a separate TURSO_AUTH_TOKEN env var.
     const libsql = createClient({
       url,
       authToken: process.env.TURSO_AUTH_TOKEN || undefined,
     })
-    const adapter = new PrismaLibSQL(libsql)
+    const adapter = new PrismaLibSql(libsql)
     return new PrismaClient({ adapter, log: ['warn', 'error'] } as any)
   }
 
-  // Local SQLite file → default client (with the robust path).
+  // Local SQLite file → default client (with the robust resolved path).
   if (!process.env.DATABASE_URL) process.env.DATABASE_URL = url
   return new PrismaClient({ log: ['warn', 'error'] })
 }
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
-  prismaPromise: Promise<PrismaClient> | undefined
 }
 
-/** A ready PrismaClient (libSQL adapter on Vercel, SQLite file locally). */
-export const dbPromise: Promise<PrismaClient> =
-  globalForPrisma.prismaPromise ??
-  (async () => {
-    const client = await createPrismaClient()
-    if (process.env.NODE_ENV !== 'production') {
-      globalForPrisma.prisma = client
-      globalForPrisma.prismaPromise = dbPromise
-    }
+export const db =
+  globalForPrisma.prisma ??
+  (() => {
+    const client = createPrismaClient()
+    if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = client
     return client
   })()
-
-// Back-compat: many imports use `db` directly. Provide a thenable proxy that
-// resolves to the client, OR — for the common sync local case — eagerly resolve.
-export const db: PrismaClient = new Proxy({} as PrismaClient, {
-  get(_t, prop) {
-    // Lazily resolve the real client on first property access.
-    let client = globalForPrisma.prisma
-    if (!client) {
-      // Kick off creation if not started.
-      if (!globalForPrisma.prismaPromise) globalForPrisma.prismaPromise = dbPromise
-      // For sync access we need a resolved client — fall back to a throw with guidance.
-      throw new Error(
-        'db accessed before ready. Await `import { dbPromise } from "@/lib/db"` first, ' +
-          'or ensure DATABASE_URL is a local file: URL.'
-      )
-    }
-    const val = (client as any)[prop]
-    return typeof val === 'function' ? val.bind(client) : val
-  },
-})
-
-/** Eagerly initialise (call once at startup) so `db` is usable synchronously. */
-export async function initDb(): Promise<PrismaClient> {
-  return dbPromise
-}
 
 /** For the /api/health diagnostic. */
 export function getResolvedDbUrl(): string {

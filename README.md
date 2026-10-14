@@ -65,15 +65,41 @@ bun run scripts/sync-okanime.ts --since 2026-10-01
 
 ## النشر على استضافة
 
-```bash
-bun install
-bun run db:push          # يضمن تطابق قاعدة البيانات مع المخطط
-bun run dev              # للتطوير  (أو bun run build && bun run start للإنتاج)
-```
+### ⚠️ ملاحظة مهمة حول Vercel
+Vercel خادم **serverless** بنظام ملفات مؤقت — لذا قاعدة SQLite (ملف) **لا تدوم** فيه
+(القراءة تعمل لأن الملف مُحزَّم، لكن الكتابة مثل إضافة أنمي جديد عبر أداة التحديث
+تُمحى مع كل استدعاء بارد). **لكي تبقى الأنميات الجديدة، استخدم Turso** (قاعدة
+libSQL بعيدة متوافقة مع SQLite، مجانية، تعمل على serverless).
 
-- قاعدة البيانات ملف SQLite في `db/custom.db` (تبدأ ممتلئة بـ 2,187 أنمي).
-- **اضبط `ADMIN_PASSWORD`** في `.env` قبل النشر لحماية أداة التحديث.
-- الموقع العام يخدم على `/`، وأداة التحديث على `/admin`.
+### النشر على Vercel + Turso (موصى به)
+1. **أنشئ قاعدة Turso** (مجاناً):
+   - أسهل: من لوحة Vercel → **Storage/Integrations → Turso** → Create database.
+   - أو من https://turso.tech : أنشئ حساباً، ثم `turso db create aniverse`.
+   - احصل على `libsql://...` ورابط **auth token**.
+2. **ادفع المخطط إلى Turso** (يُنشئ الجداول):
+   ```bash
+   DATABASE_URL='libsql://<turso-url>?authToken=<token>' bun run db:push
+   ```
+3. **انسخ البيانات** من SQLite المحلي إلى Turso:
+   ```bash
+   bun run scripts/migrate-to-turso.ts 'libsql://<turso-url>?authToken=<token>'
+   ```
+   (أو مرر التوكن كوسيط ثاني). هذا ينسخ الأنميات والحلقات وروابط المشاهدة.
+4. **اضبط متغيرات البيئة على Vercel**:
+   - `DATABASE_URL` = `libsql://<turso-url>?authToken=<token>`
+   - (اختياري) `ADMIN_PASSWORD` = كلمة سر أداة التحديث.
+5. **انشر** على Vercel (`bun run build` ينجح، والموقع يقرأ/يكتب من Turso → الأنميات
+   الجديدة تدوم).
+
+> الآن عند استخدام أداة التحديث (`/admin`)، تُكتب الإضافات في Turso (بعيدة)
+> فتبقى دائمة عبر كل الاستدعاءات.
+
+### نشر على خادم Node.js/VPS (بديل)
+على خادم دائم (Railway، Render، Fly.io، VPS) يعمل بـ`bun run start`، تعمل SQLite
+الملفية كما هي بدون Turso (نظام الملفات دائم هناك):
+```bash
+bun install && bun run db:push && bun run build && bun run start
+```
 
 ## سكريبتات إثراء إضافية (اختيارية)
 
