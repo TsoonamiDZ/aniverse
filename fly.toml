@@ -13,3 +13,6 @@ primary_region = "ams"
 [[mounts]]
   source = "data"
   destination = "/data"
+[[mounts]]
+  source = "data"
+  destination = "/data"
