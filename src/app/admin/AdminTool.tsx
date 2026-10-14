@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   RefreshCw,
   CheckCircle2,
-  AlertCircle,
+  Info,
   Film,
   Tv,
   LogOut,
@@ -278,9 +278,9 @@ export function AdminTool() {
 
             {(newAnime > (scanResult.previewAnime?.length ?? 0) ||
               newEps > (scanResult.previewEpisodes?.length ?? 0)) && (
-              <p className="flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2.5 py-1.5 text-[11px] text-amber-500">
-                <AlertCircle className="h-3.5 w-3.5" />
-                تُعرض أوّل {(scanResult.previewAnime?.length ?? 0) + (scanResult.previewEpisodes?.length ?? 0)} عنصرًا. سيُدرج التحديث ما يصل إليه (حتى 200 حلقة لكل ضغطة).
+              <p className="flex items-center gap-1.5 rounded-md border border-border/60 bg-muted/30 px-2.5 py-1.5 text-[11px] text-muted-foreground">
+                <Info className="h-3.5 w-3.5 shrink-0 text-primary" />
+                المعاينة تعرض أوّل {(scanResult.previewAnime?.length ?? 0) + (scanResult.previewEpisodes?.length ?? 0)} عنصرًا فقط (الإجمالي أكبر). اضغط «تحديث قاعدة البيانات» لإدراجها، وأعد الضغط لسحب المزيد.
               </p>
             )}
 
