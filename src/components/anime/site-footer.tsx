@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Film, Tv, Link2, ShieldAlert, Download } from "lucide-react";
+import { Film, Tv, Link2, ShieldAlert } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { StatsResponse } from "@/lib/anime-types";
 
@@ -64,15 +64,6 @@ export function SiteFooter() {
             <Link href="/" className="inline-flex items-center" aria-label="Aniverse — الصفحة الرئيسية">
               <img src="/aniverse-logo.png" alt="Aniverse" className="h-7 w-auto invert dark:invert-0" />
             </Link>
-            <span className="text-border">·</span>
-            <a
-              href="/api/download"
-              className="inline-flex items-center gap-1.5 rounded-md border border-border/60 bg-card/40 px-3 py-1.5 text-xs font-semibold text-foreground/90 transition hover:border-primary/50 hover:text-primary"
-              title="نزّل المشروع كاملاً (مضغوط) لتشغّله على حاسوبك"
-            >
-              <Download className="h-3.5 w-3.5" />
-              نزّل المشروع (zip)
-            </a>
           </div>
           <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
             مكتبة فهرسية لروابط مشغّلات الأنمي المُجمَّعة علنًا من مصادر البث. لا يستضيف
