@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
-import { createClient } from '@libsql/client'
+
 import * as path from 'path'
 import * as fs from 'fs'
 
@@ -43,12 +43,13 @@ function createPrismaClient(): PrismaClient {
 
   // Remote libSQL (Turso) → use the driver adapter so writes persist on serverless.
   if (isLibSqlUrl(url)) {
-    const libsql = createClient({
+    // PrismaLibSql takes a Config object ({ url, authToken }) — NOT a pre-created
+    // @libsql/client Client. It creates the client internally on connect().
+    const adapter = new PrismaLibSql({
       url,
       authToken: process.env.TURSO_AUTH_TOKEN || undefined,
-    })
-    const adapter = new PrismaLibSql(libsql)
-    return new PrismaClient({ adapter, log: ['warn', 'error'] } as any)
+    } as any);
+    return new PrismaClient({ adapter, log: ['warn', 'error'] } as any);
   }
 
   // Local SQLite file → default client (with the robust resolved path).
