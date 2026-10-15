@@ -19,9 +19,9 @@ import { createClient } from "@libsql/client";
 // Source: the local SQLite file (resolved from .env or the default path).
 const src = new PrismaClient({ log: ["warn", "error"] });
 
-// Destination: Turso (libSQL), from the first CLI arg.
-const tursoUrl = process.argv[2];
-const tursoToken = process.argv[3];
+// Destination: Turso (libSQL), from env vars or CLI args.
+const tursoUrl = process.argv[2] || process.env.TURSO_DATABASE_URL || process.env.DEST_DATABASE_URL;
+const tursoToken = process.argv[3] || process.env.TURSO_AUTH_TOKEN;
 if (!tursoUrl) {
   console.error(
     "Usage: bun run scripts/migrate-to-turso.ts 'libsql://<url>?authToken=<token>'"
