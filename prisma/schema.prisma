@@ -2,8 +2,7 @@
 // Data source: okanime.xyz snapshot (2186 anime, 25866 episodes, 149216 watch links).
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
