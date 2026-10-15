@@ -1,35 +1,27 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaLibSql } from '@prisma/adapter-libsql'
-
 import * as path from 'path'
 import * as fs from 'fs'
 
 /**
- * Database client — works in BOTH environments:
+ * LAZY database client — the PrismaClient is NOT created at module load (which
+ * happens during `next build`'s "Generating static pages" phase, when env vars
+ * may not be available). Instead, it's created on FIRST property access (i.e.,
+ * when an API route actually queries the DB at runtime).
+ *
+ * Supports BOTH:
  *  - Local dev / sandbox:  DATABASE_URL = file:./db/custom.db (or unset → auto-resolved)
- *                         → default PrismaClient (local SQLite file).
- *  - Vercel / serverless:  DATABASE_URL = libsql://<turso>?authToken=...
- *                         → PrismaClient with the libSQL driver adapter (Turso, remote).
- *
- * The schema stays `provider = "sqlite"` (libSQL is SQLite-compatible) — only the
- * connection differs, so writes PERSIST on Vercel when using Turso.
- *
- * Construction is fully SYNCHRONOUS (createClient + PrismaLibSQL + PrismaClient are
- * all sync), so existing `db.anime.findMany(...)` call sites work unchanged.
+ *  - Vercel / serverless:  DATABASE_URL (or TURSO_DATABASE_URL) = libsql://<turso>
+ *                         → PrismaLibSql adapter with Config { url, authToken }
  */
 
-/** Resolve a robust local SQLite file path (project-root/db/custom.db). */
 function resolveLocalSqliteUrl(): string {
   const tryPaths = [
     path.join(process.cwd(), 'db', 'custom.db'),
     path.join(process.cwd(), '.next', 'standalone', 'db', 'custom.db'),
   ]
   for (const p of tryPaths) {
-    try {
-      if (fs.existsSync(p)) return `file:${p}`
-    } catch {
-      /* ignore */
-    }
+    try { if (fs.existsSync(p)) return `file:${p}` } catch { /* ignore */ }
   }
   return `file:${path.join(process.cwd(), 'db', 'custom.db')}`
 }
@@ -39,37 +31,61 @@ function isLibSqlUrl(url: string): boolean {
 }
 
 function createPrismaClient(): PrismaClient {
-  const url = process.env.DATABASE_URL || resolveLocalSqliteUrl()
+  // Read the URL from DATABASE_URL OR TURSO_DATABASE_URL (the Vercel Turso
+  // integration sets the latter). Fall back to local SQLite file.
+  const url =
+    process.env.DATABASE_URL ||
+    process.env.TURSO_DATABASE_URL ||
+    resolveLocalSqliteUrl()
 
-  // Remote libSQL (Turso) → use the driver adapter so writes persist on serverless.
+  // Auth token: TURSO_AUTH_TOKEN (standard) OR parsed from the URL query.
+  const authToken = process.env.TURSO_AUTH_TOKEN || undefined
+
   if (isLibSqlUrl(url)) {
-    // PrismaLibSql takes a Config object ({ url, authToken }) — NOT a pre-created
-    // @libsql/client Client. It creates the client internally on connect().
-    const adapter = new PrismaLibSql({
-      url,
-      authToken: process.env.TURSO_AUTH_TOKEN || undefined,
-    } as any);
-    return new PrismaClient({ adapter, log: ['warn', 'error'] } as any);
+    // PrismaLibSql takes a Config object ({ url, authToken }) — it creates
+    // the @libsql/client internally on connect().
+    const adapter = new PrismaLibSql({ url, authToken } as any)
+    return new PrismaClient({ adapter, log: ['warn', 'error'] } as any)
   }
 
   // Local SQLite file → default client (with the robust resolved path).
-  if (!process.env.DATABASE_URL) process.env.DATABASE_URL = url
+  if (!process.env.DATABASE_URL && !process.env.TURSO_DATABASE_URL) {
+    process.env.DATABASE_URL = url
+  }
   return new PrismaClient({ log: ['warn', 'error'] })
 }
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+// ─── Lazy singleton via Proxy ──────────────────────────────────────────────
+// The real PrismaClient is created on FIRST property access, NOT at module load.
+// This prevents build-time failures (env vars not available during `next build`).
+
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined }
+
+let _client: PrismaClient | null = null
+
+function getClient(): PrismaClient {
+  if (globalForPrisma.prisma) return globalForPrisma.prisma
+  if (!_client) {
+    _client = createPrismaClient()
+    if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = _client
+  }
+  return _client
 }
 
-export const db =
-  globalForPrisma.prisma ??
-  (() => {
-    const client = createPrismaClient()
-    if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = client
-    return client
-  })()
+/** A lazy PrismaClient — safe during build (no connection until first query). */
+export const db = new Proxy({} as PrismaClient, {
+  get(_target, prop: string) {
+    const client = getClient()
+    const value = (client as any)[prop]
+    return typeof value === 'function' ? value.bind(client) : value
+  },
+})
 
 /** For the /api/health diagnostic. */
 export function getResolvedDbUrl(): string {
-  return process.env.DATABASE_URL || '(unset — will resolve to local SQLite)'
+  return (
+    process.env.DATABASE_URL ||
+    process.env.TURSO_DATABASE_URL ||
+    '(unset — will resolve to local SQLite)'
+  )
 }
