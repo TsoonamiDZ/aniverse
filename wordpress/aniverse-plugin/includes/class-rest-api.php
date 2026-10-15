@@ -59,6 +59,20 @@ class Aniverse_REST_API {
             'callback' => [self::class, 'ping'],
             'permission_callback' => '__return_true',
         ]);
+        register_rest_route($ns, '/import', [
+            'methods' => 'POST',
+            'callback' => [self::class, 'import_batch'],
+            'permission_callback' => function () {
+                return current_user_can('manage_options');
+            },
+        ]);
+        register_rest_route($ns, '/import/status', [
+            'methods' => 'GET',
+            'callback' => [self::class, 'import_status'],
+            'permission_callback' => function () {
+                return current_user_can('manage_options');
+            },
+        ]);
         register_rest_route($ns, '/sync', [
             'methods' => 'POST',
             'callback' => [self::class, 'sync'],
@@ -156,6 +170,41 @@ class Aniverse_REST_API {
 
     public static function ping() {
         return rest_ensure_response(['ok' => true, 't' => time()]);
+    }
+
+    public static function import_batch($req) {
+        $body = json_decode($req->get_body(), true) ?: [];
+        $offset = (int)($body['offset'] ?? 0);
+        $batchSize = (int)($body['batchSize'] ?? 200);
+
+        $info = Aniverse_Import::get_statements($offset, $batchSize);
+        if (isset($info['error'])) {
+            return new WP_Error('import_error', $info['error'], ['status' => 500]);
+        }
+
+        $result = Aniverse_Import::execute_batch($info['statements']);
+        $stats = Aniverse_Import::get_stats();
+
+        return rest_ensure_response([
+            'ok' => true,
+            'executed' => $result['ok'] + $result['failed'],
+            'succeeded' => $result['ok'],
+            'failed' => $result['failed'],
+            'totalStatements' => $info['total'],
+            'nextOffset' => $info['nextOffset'],
+            'done' => $info['done'],
+            'stats' => $stats,
+        ]);
+    }
+
+    public static function import_status() {
+        $info = Aniverse_Import::get_statements(0, 1);
+        $stats = Aniverse_Import::get_stats();
+        return rest_ensure_response([
+            'seedFile' => file_exists(Aniverse_Import::seed_file()),
+            'totalStatements' => $info['total'] ?? 0,
+            'stats' => $stats,
+        ]);
     }
 
     public static function sync($req) {

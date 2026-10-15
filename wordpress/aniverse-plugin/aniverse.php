@@ -18,6 +18,7 @@ define('ANIVERSE_URL', plugin_dir_url(__FILE__));
 require_once ANIVERSE_PATH . 'includes/class-database.php';
 require_once ANIVERSE_PATH . 'includes/class-rest-api.php';
 require_once ANIVERSE_PATH . 'includes/class-sync.php';
+require_once ANIVERSE_PATH . 'includes/class-import.php';
 
 // ── Activation: create tables ────────────────────────
 register_activation_hook(__FILE__, function () {
