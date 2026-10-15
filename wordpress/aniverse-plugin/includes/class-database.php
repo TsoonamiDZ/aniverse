@@ -6,9 +6,11 @@ if (!defined('ABSPATH')) exit;
 
 class Aniverse_Database {
 
-    public static function table_anime()    { global $wpdb; return $wpdb->prefix . 'aniverse_anime'; }
-    public static function table_episode()  { global $wpdb; return $wpdb->prefix . 'aniverse_episode'; }
-    public static function table_source()   { global $wpdb; return $wpdb->prefix . 'aniverse_watch_source'; }
+    // FIXED prefix — always 'wp_aniverse_' regardless of the WordPress table prefix.
+    // This ensures the tables match the seed SQL file exactly.
+    public static function table_anime()    { return 'wp_aniverse_anime'; }
+    public static function table_episode()  { return 'wp_aniverse_episode'; }
+    public static function table_source()   { return 'wp_aniverse_watch_source'; }
 
     public static function create_tables() {
         global $wpdb;
